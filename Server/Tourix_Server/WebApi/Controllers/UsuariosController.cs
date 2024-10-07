@@ -63,18 +63,18 @@ namespace WebApi.Controllers
             return Ok(response);
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginUser request)
-        {
-            var response = await _usuarioServices.LoginUser(request);
+        //[HttpPost("login")]
+        //public async Task<IActionResult> Login(LoginUser request)
+        //{
+        //    var response = await _usuarioServices.LoginUser(request);
 
-            if (!response.Success)
-            {
-                return BadRequest(response);
-            }
+        //    if (!response.Success)
+        //    {
+        //        return BadRequest(response);
+        //    }
 
-            return Ok(response);
-        }
+        //    return Ok(response);
+        //}
 
 
     }

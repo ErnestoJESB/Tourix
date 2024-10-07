@@ -1,5 +1,4 @@
-﻿using Domain.DTOs.Pedidos;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +7,7 @@ using System.Threading.Tasks;
 namespace Domain.Entities
 {
     public class Response<T>
-    {
-        private List<PedidoDTO> response;
-
-        public Response(Usuario? result)
-        {
-        }
+    {    
 
         public Response(T data, string message = null)
         {

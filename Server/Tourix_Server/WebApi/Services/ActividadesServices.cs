@@ -72,5 +72,66 @@ namespace WebApi.Services
             }
         }
 
+        public async Task<Response<Actividades>> GetByID(int id)
+        {
+            try
+            {
+                Actividades res = await _context.Actividades.FirstOrDefaultAsync(x => x.ActividadID == id);
+
+                return new Response<Actividades>(res);
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception("Ocurrio un error" + ex.Message);
+            }
+        }
+        //Actualizacion de actividad con spUpdateActividad
+        public async Task<Response<ActividadDTO>> ActualizarActividad(int id, ActividadDTO request)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@ActividadID", id, DbType.Int32);
+                parameters.Add("@Nombre", request.NombreActividad, DbType.String);
+                parameters.Add("@Descripcion", request.Descripcion, DbType.String);
+                parameters.Add("@Precio", request.Precio, DbType.Decimal);
+                parameters.Add("@Duracion", request.Duracion, DbType.Int32);
+                parameters.Add("@Direccion", request.Direccion, DbType.String);
+                parameters.Add("@Latitud", request.Latitud, DbType.Double);
+                parameters.Add("@Longitud", request.Longitud, DbType.Double);
+
+                using (var connection = _context.Database.GetDbConnection())
+                {
+                    await connection.ExecuteAsync("spUpdateActividad", parameters, commandType: CommandType.StoredProcedure);
+
+                    return new Response<ActividadDTO>(request, "Actividad actualizada exitosamente.");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Sucedió un error macabro: " + ex.Message);
+            }
+        }
+        //Eliminacion de actividad con spDeleteActividad
+        public async Task<Response<bool>> EliminarActividad(int id)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@ActividadID", id, DbType.Int32);
+
+                using (var connection = _context.Database.GetDbConnection())
+                {
+                    await connection.ExecuteAsync("spDeleteActividad", parameters, commandType: CommandType.StoredProcedure);
+
+                    return new Response<bool>(true, "Actividad eliminada exitosamente.");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Sucedió un error macabro: " + ex.Message);
+            }
+        }
     }
 }

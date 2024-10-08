@@ -34,5 +34,34 @@ namespace WebApi.Controllers
 
             return Ok(response);
         }
+        //Obtener actividad x id
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var response = await _actividadesServices.GetByID(id);
+            return Ok(response);
+        }
+        //Actualizacion de actividad
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Actualizar(int id, [FromBody] ActividadDTO request)
+        {
+            var response = await _actividadesServices.ActualizarActividad(id, request);
+            if (!response.Success)
+            {
+                return NotFound(response.Message);
+            }
+            return Ok(response);
+        }
+        //Eliminar actividad
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            var response = await _actividadesServices.EliminarActividad(id);
+            if (!response.Success)
+            {
+                return NotFound(response.Message);
+            }
+            return Ok(response);
+        }
     }
 }

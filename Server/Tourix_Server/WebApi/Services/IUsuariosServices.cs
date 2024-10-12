@@ -16,6 +16,5 @@ namespace WebApi.Services
 
         public Task<Response<Usuario>> GetByID(int id);
 
-        public Task<Response<LoginResponse>> LoginUser(LoginUser request);
     }
 }

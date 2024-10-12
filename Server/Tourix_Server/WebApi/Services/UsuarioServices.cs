@@ -108,49 +108,49 @@ namespace WebApi.Services
         }
 
 
-        public async Task<Response<LoginResponse>> LoginUser(LoginUser request)
-        {
-            try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("@correo", request.email, DbType.String);
-                parameters.Add("@password", request.password, DbType.String);
-                parameters.Add("@resultado", dbType: DbType.Boolean, size: 250, direction: ParameterDirection.Output);
-                parameters.Add("@rol", dbType: DbType.String, size: 25, direction: ParameterDirection.Output);
-                parameters.Add("@id", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                parameters.Add("@nombre", dbType: DbType.String, size: 25, direction: ParameterDirection.Output);
-                parameters.Add("@email", dbType: DbType.String, size: 40, direction: ParameterDirection.Output);
-                parameters.Add("@telefono", dbType: DbType.String, size: 40, direction: ParameterDirection.Output);
+        //public async Task<Response<LoginResponse>> LoginUser(LoginUser request)
+        //{
+        //    try
+        //    {
+        //        var parameters = new DynamicParameters();
+        //        parameters.Add("@correo", request.email, DbType.String);
+        //        parameters.Add("@password", request.password, DbType.String);
+        //        parameters.Add("@resultado", dbType: DbType.Boolean, size: 250, direction: ParameterDirection.Output);
+        //        parameters.Add("@rol", dbType: DbType.String, size: 25, direction: ParameterDirection.Output);
+        //        parameters.Add("@id", dbType: DbType.Int32, direction: ParameterDirection.Output);
+        //        parameters.Add("@nombre", dbType: DbType.String, size: 25, direction: ParameterDirection.Output);
+        //        parameters.Add("@email", dbType: DbType.String, size: 40, direction: ParameterDirection.Output);
+        //        parameters.Add("@telefono", dbType: DbType.String, size: 40, direction: ParameterDirection.Output);
 
-                using (var connection = _context.Database.GetDbConnection())
-                {
-                    await connection.ExecuteAsync("spLoginUser", parameters, commandType: CommandType.StoredProcedure);
+        //        using (var connection = _context.Database.GetDbConnection())
+        //        {
+        //            await connection.ExecuteAsync("spLoginUser", parameters, commandType: CommandType.StoredProcedure);
 
-                    var resultado = parameters.Get<bool>("@resultado");
-                    var rol = parameters.Get<string>("@rol");
-                    var id = parameters.Get<int>("@id");
-                    var nombre = parameters.Get<string>("@nombre");
-                    var email = parameters.Get<string>("@email");
-                    var telefono = parameters.Get<string>("@telefono");                    
+        //            var resultado = parameters.Get<bool>("@resultado");
+        //            var rol = parameters.Get<string>("@rol");
+        //            var id = parameters.Get<int>("@id");
+        //            var nombre = parameters.Get<string>("@nombre");
+        //            var email = parameters.Get<string>("@email");
+        //            var telefono = parameters.Get<string>("@telefono");                    
 
-                    var loginResponse = new LoginResponse
-                    {
-                        Resultado = resultado,
-                        Rol = rol,
-                        Id = id,
-                        Nombre = nombre,
-                        Email = email,
-                        Telefono = telefono
-                    };
+        //            var loginResponse = new LoginResponse
+        //            {
+        //                Resultado = resultado,
+        //                Rol = rol,
+        //                Id = id,
+        //                Nombre = nombre,
+        //                Email = email,
+        //                Telefono = telefono
+        //            };
 
-                    return new Response<LoginResponse>(loginResponse, "Usuario logueado exitosamente.");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Sucedió un error macabro: " + ex.Message);
-            }
-        }
+        //            return new Response<LoginResponse>(loginResponse, "Usuario logueado exitosamente.");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception("Sucedió un error macabro: " + ex.Message);
+        //    }
+        //}
 
 
 

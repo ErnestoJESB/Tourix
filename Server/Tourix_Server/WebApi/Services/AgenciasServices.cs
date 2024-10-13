@@ -58,5 +58,30 @@ namespace WebApi.Services
                 return new Response<AgenciasResponseDTO>(false, $"Sucedió un error: {ex.Message}", null);
             }
         }
+    
+        public async Task<Response<AgenciasResponseDTO>> Register(AgenciaCreateDTO agencia)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@Nombre", agencia.NombreAgencia, DbType.String);
+                parameters.Add("@Email", agencia.Email, DbType.String);
+                parameters.Add("@Telefono", agencia.Telefono, DbType.String);
+                parameters.Add("@Direccion", agencia.Direccion, DbType.String);
+                parameters.Add("@Descripcion", agencia.Descripcion, DbType.String);
+                parameters.Add("@Password", agencia.Password, DbType.String);
+
+                using (var connection = _context.Database.GetDbConnection())
+                {
+                    await connection.ExecuteAsync("spCreateAgencia", parameters, commandType: CommandType.StoredProcedure);
+                    return new Response<AgenciasResponseDTO>(true, "Agencia registrada exitosamente.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return new Response<AgenciasResponseDTO>(false, $"Sucedió un error: {ex.Message}");
+            }
+        }
+
     }
 }

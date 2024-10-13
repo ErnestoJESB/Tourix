@@ -16,9 +16,9 @@ namespace Domain.Entities
             Result = data;
         }
 
-        public Response(string message)
+        public Response(bool success, string message)
         {
-            Success = false;
+            Success = success;
             Message = message;
         }
 

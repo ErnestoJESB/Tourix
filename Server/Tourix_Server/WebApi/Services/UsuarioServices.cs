@@ -68,7 +68,7 @@ namespace WebApi.Services
                 var usuario = await _context.Usuarios.FindAsync(id);
                 if (usuario == null)
                 {
-                    return new Response<UsuariosResponse>("No existe ese usuario");
+                    return new Response<UsuariosResponse>(false,"No existe ese usuario");
                 }
 
                 usuario.nombre = request.nombre;
@@ -94,7 +94,7 @@ namespace WebApi.Services
                 var usuario = await _context.Usuarios.FindAsync(id);
                 if (usuario == null)
                 {
-                    return new Response<bool>("No existe el usuario");
+                    return new Response<bool>(false,"No existe el usuario");
                 }
 
                 _context.Usuarios.Remove(usuario);

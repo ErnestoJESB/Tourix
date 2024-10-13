@@ -18,7 +18,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Button from "@mui/material/Button";
 
-import { Home11Icon, Logout01Icon, Backpack01Icon, PackageIcon  } from 'hugeicons-react';
+import { Home11Icon, Logout01Icon, MapsGlobal01Icon, GridViewIcon } from 'hugeicons-react';
 
 import { useNavigate } from "react-router-dom";
 
@@ -107,6 +107,7 @@ export default function HeaderAdmin() {
 
     const navigate = useNavigate();
     const logout = () => {
+        localStorage.removeItem("profile");
         navigate("/sign-in");
     };
 
@@ -194,10 +195,10 @@ export default function HeaderAdmin() {
                                 }}
                                 onClick={() => navigate("/tours")}
                             >
-                                <Backpack01Icon />
+                                <MapsGlobal01Icon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={"Tours "}
+                                primary={"Actividades "}
                                 sx={{ opacity: open ? 1 : 0 }}
                             />
                         </ListItemButton>
@@ -221,7 +222,7 @@ export default function HeaderAdmin() {
                                 }}
                                 onClick={() => navigate("/packages")}
                             >
-                                <PackageIcon />
+                                <GridViewIcon />
                             </ListItemIcon>
                             <ListItemText
                                 primary={"Packages"}

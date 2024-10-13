@@ -14,6 +14,11 @@ const theme = createTheme({
   typography: {
     fontFamily: "Urbanist, sans-serif",
   },
+  palette: {
+    background: {
+      default: "#f4f5fa",
+    },
+  }
 });
 
 // Crear un Layout para las rutas con el AppBar (Dashboard)

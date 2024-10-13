@@ -1,5 +1,7 @@
 import { Box } from "@mui/material";
 import TablaDemo from "./TablaDemo";
+import GeneralStats from "./GeneralStats";
+import Graphs from "./Graphs";
 
 export default function HomeAdmin() {
     return (
@@ -13,7 +15,8 @@ export default function HomeAdmin() {
                 },
             }}
         >
-            <TablaDemo />
+            <GeneralStats/>
+            <Graphs />
         </Box>
     );
 }

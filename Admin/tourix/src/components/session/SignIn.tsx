@@ -1,17 +1,21 @@
-import * as React from 'react';
+import React, { useEffect, useState } from "react";
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
 import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
-import { Facebook02Icon, GoogleIcon } from 'hugeicons-react';
+
+import { login } from "../../services/UserServices";
+import { useNavigate } from 'react-router-dom';
+import { Alert, InputAdornment, Slide, SlideProps, Snackbar } from "@mui/material";
+import EmailIcon from '@mui/icons-material/Email';
+import IconButton from '@mui/material/IconButton';
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import PasswordIcon from '@mui/icons-material/Password';
 
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -55,67 +59,75 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
     },
 }));
 
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
-    const [emailError, setEmailError] = React.useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-    const [passwordError, setPasswordError] = React.useState(false);
-    const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
+export default function SignIn() {
+    const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertSeverity, setAlertSeverity] = useState<"success" | "error">(
+        "success"
+    );
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [alertOpen, setAlertOpen] = useState(false);
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        if (emailError || passwordError) {
-            event.preventDefault();
-            return;
+    const isFormValid = email !== '' && password !== '' && email.includes('@') && email.includes('.') && password.trim().length > 0 && email.trim().length > 0;
+
+    const handleTogglePasswordVisibility = () => {
+        setShowPassword((prevShowPassword) => !prevShowPassword);
+    };
+    const navigate = useNavigate();
+
+    const handleLogin = async () => {
+        try {
+            const response = await login(email, password);
+            setAlertOpen(true);
+            setAlertMessage(response.message);
+            setIsSuccess(response.success);
+            setAlertSeverity(response.success ? 'success' : 'error');
+            console.log(response.result);
+            localStorage.setItem('profile', JSON.stringify(response.result));
+            if (response.success) {
+                navigate('/');
+            }
+        } catch (error) {
+            setAlertOpen(true);
+            setAlertMessage('Error al iniciar sesión. Inténtalo de nuevo.');
+            setAlertSeverity('error');
+            setIsSuccess(false);
+            console.log(error);
         }
-        const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get('email'),
-            password: data.get('password'),
-        });
     };
 
-    const validateInputs = () => {
-        const email = document.getElementById('email') as HTMLInputElement;
-        const password = document.getElementById('password') as HTMLInputElement;
-
-        let isValid = true;
-
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-            setEmailError(true);
-            setEmailErrorMessage('Por favor, introduce una dirección de correo electrónico válida.');
-            isValid = false;
-        } else {
-            setEmailError(false);
-            setEmailErrorMessage('');
-        }
-
-        if (!password.value || password.value.length < 6) {
-            setPasswordError(true);
-            setPasswordErrorMessage('La contraseña debe tener al menos 6 caracteres.');
-            isValid = false;
-        } else {
-            setPasswordError(false);
-            setPasswordErrorMessage('');
-        }
-
-        return isValid;
+    const handleAlertClose = () => {
+        setAlertOpen(false);
     };
+
+    interface Props {
+        alertOpen: boolean;
+        alertMessage: string;
+        alertSeverity: "success" | "error" | "warning" | "info";
+        handleAlertClose: () => void;
+    }
+
+    // Función para definir la dirección del Slide
+    function SlideTransition(props: SlideProps) {
+        return <Slide {...props} direction="left" />;
+    }
 
     return (
         <>
             <CssBaseline enableColorScheme />
-            <SignInContainer direction="column" justifyContent="space-between">
+            <SignInContainer direction="column" justifyContent="space-between" alignItems="center" marginTop={20}>
                 <Card variant="outlined">
                     <Typography
                         component="h1"
                         variant="h4"
-                        sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
+                        sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', }}
                     >
                         Iniciar Sesión
                     </Typography>
                     <Box
                         component="form"
-                        onSubmit={handleSubmit}
-                        noValidate
                         sx={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -123,50 +135,115 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                             gap: 2,
                         }}
                     >
-                        <FormControl>
-                            <FormLabel htmlFor="email">Correo</FormLabel>
-                            <TextField
-                                error={emailError}
-                                helperText={emailErrorMessage}
-                                id="email"
-                                type="email"
-                                name="email"
-                                placeholder="your@email.com"
-                                autoComplete="email"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={emailError ? 'error' : 'primary'}
-                                sx={{ ariaLabel: 'email' }}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <FormLabel htmlFor="password">Contraseña</FormLabel>
-                            </Box>
-                            <TextField
-                                error={passwordError}
-                                helperText={passwordErrorMessage}
-                                name="password"
-                                placeholder="••••••"
-                                type="password"
-                                id="password"
-                                autoComplete="current-password"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={passwordError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                        <Button
-                            type="submit"
+                        <TextField
+                            label="Correo electrónico"
+                            variant="outlined"
+                            type="email"
                             fullWidth
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <EmailIcon sx={{ color: '#D1D1D6' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                marginBottom: '1rem',
+                                backgroundColor: 'transparent',
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: '#3F3F46',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#797979',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#ccc',
+                                    },
+                                    '& input': {
+                                        color: '#D1D1D6',
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: 'black',
+                                    '&.Mui-focused': {
+                                        color: '#D1D1D6',
+                                    },
+                                },
+                            }}
+                        />
+                        <TextField
+                            label="Contraseña"
+                            variant="outlined"
+                            type={showPassword ? 'text' : 'password'}
+                            fullWidth
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton onClick={handleTogglePasswordVisibility} edge="end">
+                                            {showPassword ? <Visibility sx={{ color: '#D1D1D6' }} /> : <VisibilityOff sx={{ color: '#aaa' }} />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <PasswordIcon sx={{ color: '#D1D1D6' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+
+                                marginBottom: '1rem',
+                                backgroundColor: 'transparent',
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: '#3F3F46',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#797979',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#ccc',
+                                    },
+                                    '& input': {
+                                        color: '#D1D1D6',
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: 'black',
+                                    '&.Mui-focused': {
+                                        color: '#D1D1D6',
+                                    },
+                                },
+                            }}
+                        />
+                        <Button
                             variant="contained"
-                            onClick={validateInputs}
+                            fullWidth
+                            sx={{
+                                fontWeight: 600,
+                                color: 'white',
+                                fontSize: '16px',
+                                padding: '15px',
+                                backgroundColor: '#2C2C54',
+                                '&:hover': {
+                                    backgroundColor: '#10E5A5'
+                                },
+                                '&:disabled': {
+                                    backgroundColor: '#A0A0A0',
+                                    color: '#000',
+                                    cursor: 'not-allowed',
+                                },
+                                marginBottom: '1rem',
+                            }}
+                            onClick={handleLogin}
+                            disabled={!isFormValid}
                         >
-                            Iniciar Sesión
+                            Ingresar
                         </Button>
                         <Typography sx={{ textAlign: 'center' }}>
                             ¿No tienes una cuenta?{' '}
@@ -174,33 +251,29 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                                 <Link
                                     href="/sign-up"
                                     variant="body2"
-                                    sx={{ alignSelf: 'center' }}
+                                    sx={{ alignSelf: 'center', color: '#10E5A5' }}
                                 >
                                     ¡Regístrate!
                                 </Link>
                             </span>
                         </Typography>
                     </Box>
-                    <Divider>ó</Divider>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => alert('Iniciar Sesión con Google')}
-                            startIcon={<GoogleIcon />}
-                        >
-                            Iniciar Sesión con Google
-                        </Button>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => alert('Iniciar Sesión con Facebook')}
-                            startIcon={<Facebook02Icon />}
-                        >
-                            Iniciar Sesión con Facebook
-                        </Button>
-                    </Box>
                 </Card>
+                <Snackbar
+                    open={alertOpen}
+                    autoHideDuration={6000}
+                    onClose={handleAlertClose}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    TransitionComponent={SlideTransition}
+                >
+                    <Alert
+                        onClose={handleAlertClose}
+                        severity={alertSeverity}
+                        sx={{ width: {sm:'40%', md:'100%'} }}
+                    >
+                        {alertMessage}
+                    </Alert>
+                </Snackbar>
             </SignInContainer>
         </>
     );

@@ -250,6 +250,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                             type="submit"
                             fullWidth
                             variant="contained"
+                            sx={{ backgroundColor: '#2C2C54', color: 'white' }}
                             onClick={validateInputs}
                         >
                             Iniciar Sesión
@@ -260,7 +261,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                                 <Link
                                     href="/sign-in"
                                     variant="body2"
-                                    sx={{ alignSelf: 'center' }}
+                                    sx={{ alignSelf: 'center', color: '#10E5A5' }}
                                 >
                                     ¡Regístrate!
                                 </Link>

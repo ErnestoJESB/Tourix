@@ -141,5 +141,42 @@ namespace WebApi.Services
                 throw new Exception("Sucedió un error macabro: " + ex.Message);
             }
         }
+        //login cliente con spLoginCliente
+        public async Task<Response<LoginCliente>> Login(LoginUser request)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@EmailInput", request.email, DbType.String);
+                parameters.Add("@Password", request.password, DbType.String);
+                parameters.Add("@Resultado", dbType: DbType.Boolean, size: 250, direction: ParameterDirection.Output);
+                parameters.Add("@ID", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                parameters.Add("@Nombre", dbType: DbType.String, size: 250, direction: ParameterDirection.Output);
+                parameters.Add("@EmailOutput", dbType: DbType.String, size: 250, direction: ParameterDirection.Output);
+
+                using (var connection = _context.Database.GetDbConnection())
+                {
+                    await connection.ExecuteAsync("spLoginClientes", parameters, commandType: CommandType.StoredProcedure);
+                    var resultado = parameters.Get<bool>("@Resultado");
+                    
+                    if (!resultado)
+                    {
+                        return new Response<LoginCliente>(null, "Credenciales incorrectas.");
+                    }
+
+                    return new Response<LoginCliente>(new LoginCliente
+                    {
+                        ID = parameters.Get<int>("@ID"),
+                        Nombre = parameters.Get<string>("@Nombre"),
+                        Email = parameters.Get<string>("@EmailOutput"),
+                        Resultado = parameters.Get<bool>("@Resultado")
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Sucedió un error macabro: " + ex.Message);
+            }
+        }
     }
 }

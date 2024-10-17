@@ -63,5 +63,13 @@ namespace WebApi.Controllers
             }
             return Ok(response);
         }
+
+        //get actividades by agencia
+        [HttpGet("Agencia/{id}")]
+        public async Task<IActionResult> GetByAgencia(int id)
+        {
+            var response = await _actividadesServices.GetActividadesByAgencia(id);
+            return Ok(response);
+        }
     }
 }

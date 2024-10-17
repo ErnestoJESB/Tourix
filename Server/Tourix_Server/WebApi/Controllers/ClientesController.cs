@@ -62,5 +62,17 @@ namespace WebApi.Controllers
             }
             return Ok(response);
         }
+
+        //Login del cliente
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginUser request)
+        {
+            var response = await _clienteServices.Login(request);
+            if (!response.Success)
+            {
+                return NotFound(response.Message);
+            }
+            return Ok(response);
+        }
     }
 }

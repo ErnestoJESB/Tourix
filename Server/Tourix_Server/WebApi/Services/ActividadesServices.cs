@@ -133,5 +133,26 @@ namespace WebApi.Services
                 throw new Exception("Sucedió un error macabro: " + ex.Message);
             }
         }
+        //get actividades by agencia con [spGetActividadesByAgencia]
+        public async Task<Response<List<Actividades>>> GetActividadesByAgencia(int id)
+        {
+            try
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@AgenciaID", id, DbType.Int32);
+
+                using (var connection = _context.Database.GetDbConnection())
+                {
+                    var res = await connection.QueryAsync<Actividades>("spGetActividadesByAgencia", parameters, commandType: CommandType.StoredProcedure);
+
+                    return new Response<List<Actividades>>(res.ToList());
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Sucedió un error macabro: " + ex.Message);
+            }
+        }
+
     }
 }

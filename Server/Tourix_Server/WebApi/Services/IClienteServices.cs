@@ -12,6 +12,7 @@ namespace WebApi.Services
         public Task<Response<ClienteDTO>> ActualizarCliente(int id, ClienteDTO request);
 
         public Task<Response<bool>> EliminarCliente(int id);
+        public Task<Response<LoginCliente>> Login(LoginUser request);
 
 
     }

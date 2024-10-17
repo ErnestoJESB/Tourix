@@ -17,6 +17,7 @@ builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseSqlSer
 builder.Services.AddTransient<IUsuarioServices, UsuarioServices>();
 builder.Services.AddTransient<IActividadesServices, ActividadesServices>();
 builder.Services.AddTransient<IAgenciasServices, AgenciasServices>();
+builder.Services.AddTransient<IClienteServices, ClienteServices>();
 
 
 

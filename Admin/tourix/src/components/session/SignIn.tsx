@@ -84,7 +84,7 @@ export default function SignIn() {
             setAlertMessage(response.message);
             setIsSuccess(response.success);
             setAlertSeverity(response.success ? 'success' : 'error');
-            console.log(response.result);
+            console.log(response);
             localStorage.setItem('profile', JSON.stringify(response.result));
             if (response.success) {
                 navigate('/');
@@ -163,7 +163,7 @@ export default function SignIn() {
                                         borderColor: '#ccc',
                                     },
                                     '& input': {
-                                        color: '#D1D1D6',
+                                        color: 'black',
                                     },
                                 },
                                 '& .MuiInputLabel-root': {
@@ -210,7 +210,7 @@ export default function SignIn() {
                                         borderColor: '#ccc',
                                     },
                                     '& input': {
-                                        color: '#D1D1D6',
+                                        color: 'black',
                                     },
                                 },
                                 '& .MuiInputLabel-root': {

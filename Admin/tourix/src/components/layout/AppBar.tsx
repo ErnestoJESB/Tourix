@@ -22,6 +22,14 @@ import { Home11Icon, Logout01Icon, MapsGlobal01Icon, GridViewIcon } from 'hugeic
 
 import { useNavigate } from "react-router-dom";
 
+interface Agency {
+    id: number;
+    nombre: string;
+    correo: string;
+}
+const Agency = localStorage.getItem("profile") ? JSON.parse(localStorage.getItem("profile") as string) : null;
+
+
 const drawerWidth = 240;
 
 const openedMixin = (theme: Theme): CSSObject => ({
@@ -129,7 +137,7 @@ export default function HeaderAdmin() {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h1" fontSize={30} noWrap component="div">
-                        Dashboard Tourix
+                        Dashboard  - {Agency?.nombre}
                     </Typography>
                 </Toolbar>
                 <Button

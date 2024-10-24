@@ -15,7 +15,7 @@ export default function HomeAdmin() {
                 },
             }}
         >
-            <GeneralStats/>
+            <GeneralStats />
             <Graphs />
         </Box>
     );

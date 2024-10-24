@@ -1,27 +1,21 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import MuiCard from '@mui/material/Card';
-import { styled } from '@mui/material/styles';
+import { register } from "../../services/UserServices";
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { IconButton, InputAdornment, Box, Button, CssBaseline, Link, TextField, Typography, Stack, Card as MuiCard, styled, Alert, Grid2 } from '@mui/material';
+import { MailAtSign02Icon, ViewOffIcon, ViewIcon, LockPasswordIcon, UserAccountIcon, CallAdd02Icon, Location01Icon, TextFirstlineRightIcon } from 'hugeicons-react';
+
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
-    alignSelf: 'center',
+    alignItems: 'center',
     width: '100%',
     padding: theme.spacing(4),
     gap: theme.spacing(2),
     margin: 'auto',
     [theme.breakpoints.up('sm')]: {
-        maxWidth: '450px',
+        maxWidth: '650px',
     },
     boxShadow:
         'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
@@ -54,85 +48,43 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignUp(props: { disableCustomTheme?: boolean }) {
-    const [nameError, setNameError] = React.useState(false);
-    const [nameErrorMessage, setNameErrorMessage] = React.useState('');
-    const [lastNameError, setLastNameError] = React.useState(false);
-    const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
-    const [emailError, setEmailError] = React.useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-    const [passwordError, setPasswordError] = React.useState(false);
-    const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-    const [confirmPasswordError, setConfirmPasswordError] = React.useState(false);
-    const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] = React.useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        if (emailError || passwordError || nameError || lastNameError || confirmPasswordError) {
-            event.preventDefault();
-            return;
-        }
-        const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get('email'),
-            password: data.get('password'),
-        });
+    const [nombreAgencia, setNombreAgencia] = useState('');
+    const [email, setEmail] = useState('');
+    const [telefono, setTelefono] = useState('');
+    const [direccion, setDireccion] = useState('');
+    const [descripcion, setDescripcion] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    const [alertMessage, setAlertMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    const isFormValid = nombreAgencia !== '' && email !== '' && password !== '' && confirmPassword !== '' && telefono !== '' && direccion != '' && descripcion != '' && email.includes('@') && email.includes('.') && password === confirmPassword && nombreAgencia.trim().length > 0 && email.trim().length > 0 && password.trim().length > 0 && confirmPassword.trim().length > 0 && telefono.trim().length > 0 && direccion.trim().length > 0 && descripcion.trim().length > 0;
+
+    const handleTogglePasswordVisibility = () => {
+        setShowPassword((prevShowPassword) => !prevShowPassword);
     };
-
-    const validateInputs = () => {
-        const name = document.getElementById('nombre') as HTMLInputElement;
-        const lastName = document.getElementById('apellido') as HTMLInputElement;
-        const email = document.getElementById('email') as HTMLInputElement;
-        const password = document.getElementById('password') as HTMLInputElement;
-        const confirmPassword = document.getElementById('confirmarPassword') as HTMLInputElement;
-
-        let isValid = true;
-
-        if (!name.value) {
-            setNameError(true);
-            setNameErrorMessage('Por favor, introduce tu nombre.');
-            isValid = false;
-        } else {
-            setNameError(false);
-            setNameErrorMessage('');
-        }
-
-        if (!lastName.value) {
-            setLastNameError(true);
-            setLastNameErrorMessage('Por favor, introduce tu apellido.');
-            isValid = false;
-        } else {
-            setLastNameError(false);
-            setLastNameErrorMessage('');
-        }
-
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-            setEmailError(true);
-            setEmailErrorMessage('Por favor, introduce una dirección de correo electrónico válida.');
-            isValid = false;
-        } else {
-            setEmailError(false);
-            setEmailErrorMessage('');
-        }
-
-        if (!password.value || password.value.length < 6) {
-            setPasswordError(true);
-            setPasswordErrorMessage('La contraseña debe tener al menos 6 caracteres.');
-            isValid = false;
-        } else {
-            setPasswordError(false);
-            setPasswordErrorMessage('');
-        }
-
-        if (password.value !== confirmPassword.value) {
-            setConfirmPasswordError(true);
-            setConfirmPasswordErrorMessage('Las contraseñas no coinciden.');
-            isValid = false;
-        } else {
-            setConfirmPasswordError(false);
-            setConfirmPasswordErrorMessage('');
-        }
-
-        return isValid;
+    const handleToggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword((prevShowConfirmPassword) => !prevShowConfirmPassword);
     };
+    const navigate = useNavigate();
+    const handleRegister = async () => {
+        try {
+            const response = await register(nombreAgencia, email, password, telefono, direccion, descripcion);
+            setAlertMessage(response.message);
+            setIsSuccess(response.success);
+            if (response.success) {
+                navigate('/sign-in');
+            }
+        } catch (error) {
+            console.log(error);
+            setAlertMessage('Error al registrar la cuenta');
+            setIsSuccess(false);
+        }
+    }
 
     return (
         <>
@@ -142,132 +94,364 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                     <Typography
                         component="h1"
                         variant="h4"
+                        marginBottom={3}
                         sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
                     >
                         Crear una cuenta
                     </Typography>
                     <Box
                         component="form"
-                        onSubmit={handleSubmit}
-                        noValidate
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            width: '100%',
-                            gap: 2,
-                        }}
                     >
-                        <FormControl>
-                            <FormLabel htmlFor="nombre">Nombre</FormLabel>
-                            <TextField
-                                error={nameError}
-                                helperText={nameErrorMessage}
-                                id="nombre"
-                                name="nombre"
-                                placeholder="Nombre"
-                                autoComplete="given-name"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={nameError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel htmlFor="apellido">Apellido</FormLabel>
-                            <TextField
-                                error={lastNameError}
-                                helperText={lastNameErrorMessage}
-                                id="apellido"
-                                name="apellido"
-                                placeholder="Apellido"
-                                autoComplete="family-name"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={lastNameError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel htmlFor="email">Correo</FormLabel>
-                            <TextField
-                                error={emailError}
-                                helperText={emailErrorMessage}
-                                id="email"
-                                type="email"
-                                name="email"
-                                placeholder="your@email.com"
-                                autoComplete="email"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={emailError ? 'error' : 'primary'}
-                                sx={{ ariaLabel: 'email' }}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <FormLabel htmlFor="password">Contraseña</FormLabel>
-                            </Box>
-                            <TextField
-                                error={passwordError}
-                                helperText={passwordErrorMessage}
-                                name="password"
-                                placeholder="••••••"
-                                type="password"
-                                id="password"
-                                autoComplete="current-password"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={passwordError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <FormLabel htmlFor="confirmarPassword">Confirmar Contraseña</FormLabel>
-                            </Box>
-                            <TextField
-                                error={confirmPasswordError}
-                                helperText={confirmPasswordErrorMessage}
-                                name="confirmarPassword"
-                                placeholder="••••••"
-                                type="password"
-                                id="confirmarPassword"
-                                autoComplete="current-password"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={confirmPasswordError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
+                        <Grid2 container spacing={2}>
+                            <Grid2 size={{ xs: 12, sm: 12, md: 12 }}>
+                                <TextField
+                                    label="Nombre de la agencia"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={nombreAgencia}
+                                    onChange={(e) => setNombreAgencia(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <UserAccountIcon style={{ color: '#D1D1D6' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        marginBottom: '1rem',
+                                        backgroundColor: 'transparent',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#3F3F46',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#797979',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#ccc',
+                                            },
+                                            '& input': {
+                                                color: 'black',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'black',
+                                            '&.Mui-focused': {
+                                                color: '#D1D1D6',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Grid2>
+                            <Grid2 size={{ xs: 12, sm: 12, md: 6 }}>
+                                <TextField
+                                    label="Teléfono"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={telefono}
+                                    onChange={(e) => setTelefono(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <CallAdd02Icon style={{ color: '#D1D1D6' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        marginBottom: '1rem',
+                                        backgroundColor: 'transparent',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#3F3F46',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#797979',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#ccc',
+                                            },
+                                            '& input': {
+                                                color: 'black',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'black',
+                                            '&.Mui-focused': {
+                                                color: '#D1D1D6',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Grid2>
+                            <Grid2 size={{ xs: 12, sm: 12, md: 6 }}>
+                                <TextField
+                                    label="Dirección"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={direccion}
+                                    onChange={(e) => setDireccion(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <Location01Icon style={{ color: '#D1D1D6' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        marginBottom: '1rem',
+                                        backgroundColor: 'transparent',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#3F3F46',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#797979',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#ccc',
+                                            },
+                                            '& input': {
+                                                color: 'black',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'black',
+                                            '&.Mui-focused': {
+                                                color: '#D1D1D6',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Grid2>
+                            <Grid2 size={{ xs: 12, sm: 12, md: 12 }}>
+                                <TextField
+                                    label="Descripción"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={descripcion}
+                                    onChange={(e) => setDescripcion(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <TextFirstlineRightIcon style={{ color: '#D1D1D6' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        marginBottom: '1rem',
+                                        backgroundColor: 'transparent',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#3F3F46',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#797979',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#ccc',
+                                            },
+                                            '& input': {
+                                                color: 'black',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'black',
+                                            '&.Mui-focused': {
+                                                color: '#D1D1D6',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Grid2>
+                            <Grid2 size={{ xs: 12, sm: 12, md: 12 }}>
+                                <TextField
+                                    label="Correo electrónico"
+                                    variant="outlined"
+                                    type="email"
+                                    fullWidth
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <MailAtSign02Icon style={{ color: '#D1D1D6' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        marginBottom: '1rem',
+                                        backgroundColor: 'transparent',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#3F3F46',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#797979',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#ccc',
+                                            },
+                                            '& input': {
+                                                color: 'black',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'black',
+                                            '&.Mui-focused': {
+                                                color: '#D1D1D6',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Grid2>
+                            <Grid2 size={{ xs: 12, sm: 12, md: 6 }}>
+                                <TextField
+                                    label="Contraseña"
+                                    variant="outlined"
+                                    type={showPassword ? 'text' : 'password'}
+                                    fullWidth
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={handleTogglePasswordVisibility} edge="end">
+                                                    {showPassword ? <ViewIcon style={{ color: '#D1D1D6' }} /> : <ViewOffIcon style={{ color: '#aaa' }} />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <LockPasswordIcon style={{ color: '#D1D1D6' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        fontFamily: 'Poppins, sans-serif',
+                                        marginBottom: '1rem',
+                                        backgroundColor: 'transparent',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#3F3F46',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#797979',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#ccc',
+                                            },
+                                            '& input': {
+                                                color: 'black',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'black',
+                                            '&.Mui-focused': {
+                                                color: '#D1D1D6',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Grid2>
+                            <Grid2 size={{ xs: 12, sm: 12, md: 6 }}>
+                                <TextField
+                                    label="Confirmar contraseña"
+                                    variant="outlined"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    fullWidth
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={handleToggleConfirmPasswordVisibility} edge="end">
+                                                    {showConfirmPassword ? <ViewIcon style={{ color: '#D1D1D6' }} /> : <ViewOffIcon style={{ color: '#aaa' }} />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <LockPasswordIcon style={{ color: '#D1D1D6' }} />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{
+                                        fontFamily: 'Poppins, sans-serif',
+                                        marginBottom: '1rem',
+                                        backgroundColor: 'transparent',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: '#3F3F46',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#797979',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#ccc',
+                                            },
+                                            '& input': {
+                                                color: 'black',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'black',
+                                            '&.Mui-focused': {
+                                                color: '#D1D1D6',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Grid2>
+                        </Grid2>
                         <Button
-                            type="submit"
-                            fullWidth
                             variant="contained"
-                            sx={{ backgroundColor: '#2C2C54', color: 'white' }}
-                            onClick={validateInputs}
+                            fullWidth
+                            sx={{
+                                fontWeight: 600,
+                                color: 'white',
+                                fontSize: '16px',
+                                padding: '15px',
+                                backgroundColor: '#2C2C54',
+                                '&:hover': {
+                                    backgroundColor: '#10E5A5'
+                                },
+                                '&:disabled': {
+                                    backgroundColor: '#A0A0A0',
+                                    color: '#000',
+                                    cursor: 'not-allowed',
+                                },
+                                marginBottom: '1rem',
+                            }}
+                            onClick={handleRegister}
+                            disabled={!isFormValid}
                         >
-                            Iniciar Sesión
+                            Ingresar
                         </Button>
                         <Typography sx={{ textAlign: 'center' }}>
-                            ¿No tienes una cuenta?{' '}
+                            ¿Ya tienes una cuenta?{' '}
                             <span>
                                 <Link
                                     href="/sign-in"
                                     variant="body2"
                                     sx={{ alignSelf: 'center', color: '#10E5A5' }}
                                 >
-                                    ¡Regístrate!
+                                    Iniciar sesión
                                 </Link>
                             </span>
                         </Typography>
                     </Box>
                 </Card>
+                {alertMessage && (
+                    isSuccess ? (
+                        <Alert severity="success" sx={{ marginBottom: '20px' }}>
+                            {alertMessage}
+                        </Alert>
+                    ) : (
+                        <Alert severity="error" sx={{ marginBottom: '20px' }}>
+                            {alertMessage}
+                        </Alert>
+                    )
+                )}
             </SignInContainer>
         </>
     );

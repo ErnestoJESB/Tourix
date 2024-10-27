@@ -197,7 +197,9 @@ export default function Packages() {
 
     const fetchData = async () => {
         try {
-            const data = await getActivities();
+            const id = JSON.parse(localStorage.getItem('profile') || '{}').id;
+            
+            const data = await getActivities(id);
             const formattedData = data.map((activity: any) => ({
                 ...activity,
                 fechaCreacion: new Date(activity.fechaCreacion).toLocaleDateString('es-ES')

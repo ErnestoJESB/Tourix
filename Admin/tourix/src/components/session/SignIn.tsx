@@ -84,7 +84,6 @@ export default function SignIn() {
             setAlertMessage(response.message);
             setIsSuccess(response.success);
             setAlertSeverity(response.success ? 'success' : 'error');
-            console.log(response);
             localStorage.setItem('profile', JSON.stringify(response.result));
             if (response.success) {
                 navigate('/');
@@ -94,7 +93,6 @@ export default function SignIn() {
             setAlertMessage('Error al iniciar sesión. Inténtalo de nuevo.');
             setAlertSeverity('error');
             setIsSuccess(false);
-            console.log(error);
         }
     };
 

@@ -1,8 +1,44 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid2, Modal, Paper, Snackbar, styled, TextField, Typography } from '@mui/material';
-import { getActivities } from '../../services/ActivityServices';
+import { createActivity, getActivities } from '../../services/ActivityServices';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Delete02Icon, PencilEdit02Icon, ViewIcon, TaskAdd02Icon, Cancel01Icon } from 'hugeicons-react';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import MapWithSearch from './ApiMap';
+import { createAvailability } from '../../services/AvailabilityServices';
+
+interface Activity {
+    actividadID?: number;
+    agenciaID: number;
+    nombreActividad: string;
+    descripcion: string;
+    precio: number;
+    duracion: number;
+    direccion: string;
+    latitud: number;
+    longitud: number;
+}
+
+interface Availability {
+    disponibilidadID?: number;
+    actividadID?: number;
+    cupoMaximo: number;
+    fechaHora: string;
+}
+
+const defaultActivity: Activity = {
+    actividadID: 0,
+    agenciaID: 0,
+    nombreActividad: '',
+    descripcion: '',
+    precio: 0,
+    duracion: 0,
+    direccion: '',
+    latitud: 0,
+    longitud: 0,
+}
 
 const BtnModal = styled(Button)(() => ({
     background: '#10E5A5',
@@ -36,15 +72,21 @@ const CustomTextField = styled(TextField)({
 export default function Tours() {
 
     const [activities, setActivities] = useState([]);
+    const [selectedActivity, setSelectedActivity] = useState<Activity>(defaultActivity);
     const [open, setOpen] = useState(false);
-    const [products, setProducts] = useState<any[]>([]);
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-    const [deleteInventoryId, setDeleteInventoryId] = useState<number | null>(null);
+
+    const [activeStep, setActiveStep] = useState(0);
+    const [errors, setErrors] = useState<string[]>([]);
 
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
     const [alertMessage, setAlertMessage] = useState('');
+
+    const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+    const [selectedDateTime, setSelectedDateTime] = useState<string>('');
+    const [capacity, setCapacity] = useState<number>(0);
 
     useEffect(() => {
         fetchData();
@@ -52,7 +94,8 @@ export default function Tours() {
 
     const fetchData = async () => {
         try {
-            const data = await getActivities();
+            const id = JSON.parse(localStorage.getItem('profile') || '{}').id;
+            const data = await getActivities(id);
             const formattedData = data.map((activity: any) => ({
                 ...activity,
                 fechaCreacion: new Date(activity.fechaCreacion).toLocaleDateString('es-ES')
@@ -61,6 +104,227 @@ export default function Tours() {
         }
         catch (e) {
             console.error(e);
+        }
+    }
+
+    const handleAddAvailability = () => {
+        if (selectedDateTime && capacity > 0) {
+            const newAvailability: Availability = {
+                cupoMaximo: capacity,
+                fechaHora: selectedDateTime,
+            };
+
+            setAvailabilities([...availabilities, newAvailability]);
+
+            setSelectedDateTime('');
+            setCapacity(0);
+        } else {
+            setAlertOpen(true)
+            setAlertSeverity('error');
+            setAlertMessage('Fecha y hora y cupo son obligatorios');
+        }
+    };
+
+    const handleDateTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedDateTime(event.target.value);
+    };
+
+    const handleCapacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCapacity(parseInt(event.target.value, 10));
+    };
+
+
+    const handleLocationChange = (lat: number, lng: number) => {
+        setSelectedActivity(prevActivity => ({
+            ...prevActivity,
+            latitud: lat,
+            longitud: lng
+        }));
+    };
+
+    const validateStep = () => {
+        const stepErrors: string[] = [];
+
+        if (activeStep === 0) {
+            // Validaciones para el primer paso
+            if (!selectedActivity.nombreActividad) stepErrors.push('Nombre de actividad es obligatorio');
+            if (!selectedActivity.precio) stepErrors.push('Precio es obligatorio');
+            if (!selectedActivity.duracion) stepErrors.push('Duración es obligatoria');
+            if (!selectedActivity.direccion) stepErrors.push('Dirección es obligatoria');
+            if (!selectedActivity.descripcion) stepErrors.push('Descripción es obligatoria');
+            if (!selectedActivity.latitud || !selectedActivity.longitud) stepErrors.push('Ubicación es obligatoria');
+        }
+        setErrors(stepErrors);
+        return stepErrors.length === 0; // Retorna true si no hay errores
+    };
+
+    const handleNext = () => {
+        if (validateStep()) {
+            setActiveStep((prevStep) => prevStep + 1);
+            setErrors([]); // Limpia errores si el paso es válido
+        }
+    };
+
+    const handleBack = () => setActiveStep((prevStep) => prevStep - 1);
+
+    const steps = [
+        {
+            label: 'Detalles de la Actividad', content: (
+                <Grid2 container spacing={2} padding={5} sx={{ overflowY: 'scroll', maxHeight: '45vh' }}>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 6 }}>
+                        <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
+                            <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
+                                Nombre de Actividad
+                            </Typography>
+                            <CustomTextField
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                value={selectedActivity.nombreActividad}
+                                onChange={(e) => setSelectedActivity({ ...selectedActivity, nombreActividad: e.target.value })}
+                            />
+                        </Box>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 3 }}>
+                        <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
+                            <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
+                                Precio
+                            </Typography>
+                            <CustomTextField
+                                variant="outlined"
+                                fullWidth
+                                type="number"
+                                margin="normal"
+                                value={selectedActivity.precio}
+                                onChange={(e) => ChangeValuesTextFields(e, "precio")}
+                            />
+                        </Box>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 3 }}>
+                        <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
+                            <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
+                                Duración
+                            </Typography>
+                            <CustomTextField
+                                type='number'
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                value={selectedActivity.duracion}
+                                onChange={(e) => ChangeValuesTextFields(e, "duracion")}
+                            />
+                        </Box>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 4 }}>
+                        <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
+                            <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
+                                Dirección
+                            </Typography>
+                            <CustomTextField
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                value={selectedActivity.direccion}
+                                onChange={(e) => setSelectedActivity({ ...selectedActivity, direccion: e.target.value })}
+                            />
+                        </Box>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 8 }}>
+                        <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
+                            <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
+                                Descripción
+                            </Typography>
+                            <CustomTextField
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                value={selectedActivity.descripcion}
+                                onChange={(e) => setSelectedActivity({ ...selectedActivity, descripcion: e.target.value })}
+                            />
+                        </Box>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 12 }}>
+                        <MapWithSearch apiKey="AIzaSyA6a9SUy0bmtZrhMtCWHMuOV6l_gcP0r18" onLocationChange={handleLocationChange} />
+                    </Grid2>
+                </Grid2>
+            )
+        },
+        {
+            label: 'Disponibilidad', content: (
+                <Grid2 container spacing={2} padding={5} sx={{ overflow: 'scroll', maxHeight: '45vh' }}>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }}>
+                        <Typography component="h2" fontSize={20} fontWeight={600} marginBottom={2}>
+                            Selecciona la Fecha y Hora
+                        </Typography>
+                        <TextField
+                            variant="outlined"
+                            type="datetime-local"
+                            fullWidth
+                            value={selectedDateTime}
+                            onChange={handleDateTimeChange}
+                        />
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }}>
+                        <Typography component="h2" fontSize={20} fontWeight={600} marginBottom={2}>
+                            Cupo
+                        </Typography>
+                        <TextField
+                            variant="outlined"
+                            type="number"
+                            fullWidth
+                            value={capacity}
+                            onChange={handleCapacityChange}
+                        />
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 2 }} sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                    }}>
+                        <Button variant="contained" onClick={handleAddAvailability}>
+                            Agregar Disponibilidad
+                        </Button>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12 }}>
+                        <Typography component="h2" fontSize={20} fontWeight={600} marginTop={2}>
+                            Disponibilidades Agregadas
+                        </Typography>
+                        {availabilities.map((availability, index) => (
+                            <Typography key={index}>
+                                Fecha y Hora: {availability.fechaHora} - Cupo: {availability.cupoMaximo}
+                            </Typography>
+                        ))}
+                    </Grid2>
+                </Grid2>
+            )
+        }
+    ];
+
+    const handleSave = async () => {
+        try {
+            const response = await createActivity(selectedActivity);
+            const AgenciaID = response.result.lastID;
+            const disponibilidad = availabilities.map((availability) => ({
+                ...availability,
+                actividadID: AgenciaID,
+            }));
+
+            console.log(disponibilidad);
+
+            await Promise.all(disponibilidad.map((availability) => createAvailability(availability)));
+
+            setAlertOpen(true);
+            setAlertSeverity('success');
+            setAlertMessage(response.message);
+            setSelectedActivity(defaultActivity);
+            fetchData();
+            setOpen(false);
+        }
+        catch (e) {
+            console.error(e);
+            setAlertOpen(true);
+            setAlertSeverity('error');
+            setAlertMessage('Error al crear actividad');
         }
     }
 
@@ -150,7 +414,17 @@ export default function Tours() {
     ];
 
     // Modal
+    const openModal = () => {
+        const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+        const agencyID = profile.id;
+        setSelectedActivity({ ...selectedActivity, agenciaID: agencyID });
+        setActiveStep(0);
+        setAvailabilities([]);
+        setOpen(true);
+    }
+
     const CloseModal = () => {
+        setSelectedActivity(defaultActivity);
         setOpen(false);
     }
 
@@ -160,6 +434,32 @@ export default function Tours() {
     };
     const handleDeleteConfirmClose = () => {
         setDeleteConfirmOpen(false);
+    };
+
+
+    const ChangeValuesTextFields = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+        field: keyof Activity
+    ) => {
+        if (selectedActivity) {
+            const value = e.target.value;
+            let parsedValue: string | number = value;
+
+            const parseMapping: {
+                [key in keyof Activity]?: (val: string) => number;
+            } = {
+                precio: parseFloat,
+            };
+
+            if (field in parseMapping) {
+                parsedValue = parseMapping[field]!(value);
+            }
+
+            setSelectedActivity({
+                ...selectedActivity,
+                [field]: parsedValue,
+            });
+        }
     };
 
     return (
@@ -183,7 +483,7 @@ export default function Tours() {
                     <Grid2 size={{ xs: 12, sm: 12, md: 2 }}>
                         <Button
                             variant="contained"
-                            onClick={() => setOpen(true)}
+                            onClick={() => openModal()}
                             style={{ background: 'primary', textTransform: 'none', borderRadius: '15px', padding: '10px 30px' }}
                         >
                             <TaskAdd02Icon style={{ marginRight: '10px' }} />
@@ -227,7 +527,7 @@ export default function Tours() {
                     {/* Titulo */}
                     <Box sx={{ width: '100%', height: '100px', background: '#2C2C54', color: 'white', position: 'relative', zIndex: '2' }}>
                         <Typography component="h1" fontSize={20} fontWeight={600} marginBottom={2} padding={5}>
-                            Agregar Actividad
+                            {selectedActivity.actividadID === 0 ? 'Agregar Actividad' : 'Editar Actividad'}
                         </Typography>
                         <Button
                             onClick={CloseModal}
@@ -240,74 +540,53 @@ export default function Tours() {
                             <Cancel01Icon />
                         </Button>
                     </Box>
-                    {/* Form */}
-                    <Grid2 container spacing={2} padding={5} sx={{ overflowY: 'scroll', maxHeight: '70%' }}>
-                        <Grid2 size={{ xs: 12, sm: 12, md: 6 }}>
-                            <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
-                                <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
-                                    Nombre de Actividad
-                                </Typography>
-                                <CustomTextField
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                />
-                            </Box>
-                        </Grid2>
-                        <Grid2 size={{ xs: 12, sm: 12, md: 3 }}>
-                            <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
-                                <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
-                                    Precio
-                                </Typography>
-                                <CustomTextField
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                />
-                            </Box>
-                        </Grid2>
-                        <Grid2 size={{ xs: 12, sm: 12, md: 3 }}>
-                            <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
-                                <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
-                                    Duración
-                                </Typography>
-                                <CustomTextField
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                />
-                            </Box>
-                        </Grid2>
-                        <Grid2 size={{ xs: 12, sm: 12, md: 4 }}>
-                            <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
-                                <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
-                                    Dirección
-                                </Typography>
-                                <CustomTextField
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                />
-                            </Box>
-                        </Grid2>
-                        <Grid2 size={{ xs: 12, sm: 12, md: 8 }}>
-                            <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>
-                                <Typography component="h1" fontSize={15} fontWeight={600} marginBottom={1} sx={{ color: '#7d7d7d' }}>
-                                    Descripción
-                                </Typography>
-                                <CustomTextField
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                />
-                            </Box>
-                        </Grid2>
-                    </Grid2>
+                    {/* Stepper */}
+                    <Stepper
+                        activeStep={activeStep}
+                        alternativeLabel
+                        sx={{
+                            width: "100%",
+                            mt: 3,
+                        }}
+                    >
+                        {steps.map((step, index) => (
+                            <Step key={index}>
+                                <StepLabel error={index === activeStep && errors.length > 0}>
+                                    {step.label}
+                                </StepLabel>
+                            </Step>
+                        ))}
+                    </Stepper>
+                    {/* Contenido del paso actual */}
+                    <Box sx={{ padding: 3 }}>
+                        {steps[activeStep].content}
+                    </Box>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', height: '80px', padding: '20px 50px' }}>
-                        <BtnModal variant="contained" >
-                            Guardar
-                        </BtnModal>
+                    {/* Botones de navegación */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', padding: '20px 50px' }}>
+                        <Button
+                            disabled={activeStep === 0}
+                            onClick={handleBack}
+                            sx={{ mr: 1 }}
+                        >
+                            Anterior
+                        </Button>
+
+                        {activeStep === 1 ? (
+                            // Usa BtnModal en el último paso
+                            <BtnModal onClick={handleSave}>
+                                Guardar
+                            </BtnModal>
+                        ) : (
+                            // Usa Button en los demás pasos
+                            <Button
+                                onClick={handleNext}
+                                variant="contained"
+                                color="primary"
+                            >
+                                Siguiente
+                            </Button>
+                        )}
                     </Box>
                 </Box>
             </Modal>

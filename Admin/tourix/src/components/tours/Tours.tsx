@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid2, Modal, Paper, Snackbar, styled, TextField, Typography } from '@mui/material';
-import { createActivity, getActivities } from '../../services/ActivityServices';
+import { createActivity, deleteActivty, getActivities } from '../../services/ActivityServices';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Delete02Icon, PencilEdit02Icon, ViewIcon, TaskAdd02Icon, Cancel01Icon } from 'hugeicons-react';
 import Stepper from '@mui/material/Stepper';
@@ -106,7 +106,9 @@ export default function Tours() {
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
     const [alertMessage, setAlertMessage] = useState('');
+
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -481,6 +483,32 @@ export default function Tours() {
     }
 
 
+    {/* Funciones de eliminación */ }
+
+    const handleDeleteConfirmOpen = (id:number) => {
+        setDeleteProductId(id);
+        setDeleteConfirmOpen(true);
+    }
+
+    const handleDeleteConfirmClose = () => {
+        setDeleteConfirmOpen(false);
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteActivty(deleteProductId!);
+            setAlertSeverity('success');
+            setAlertMessage('Actividad eliminada correctamente');
+            await fetchData();  
+        }
+        catch (e) {
+            setAlertSeverity('error');
+            setAlertMessage('Error al eliminar actividad');
+        }
+        setAlertOpen(true);
+        setDeleteConfirmOpen(false);
+    }
+
     {/* Columnas de la tabla */ }
     const columns: GridColDef[] = [
         {
@@ -555,9 +583,7 @@ export default function Tours() {
                         variant="outlined"
                         color="error"
                         size="small"
-                        onClick={() => {
-                            setDeleteConfirmOpen(true);
-                        }}
+                        onClick={() => handleDeleteConfirmOpen(params.row.actividadID)}
                         style={{ borderRadius: '20px' }}
                     >
                         <Delete02Icon />
@@ -586,9 +612,7 @@ export default function Tours() {
     const handleAlertClose = () => {
         setAlertOpen(false);
     };
-    const handleDeleteConfirmClose = () => {
-        setDeleteConfirmOpen(false);
-    };
+    
 
     {/* Cambiar valores de los campos */ }
     const ChangeValuesTextFields = (
@@ -762,7 +786,7 @@ export default function Tours() {
                     <Button onClick={handleDeleteConfirmClose} color="primary">
                         Cancelar
                     </Button>
-                    <Button color="error">
+                    <Button onClick={handleDelete} color="error">
                         Eliminar
                     </Button>
                 </DialogActions>

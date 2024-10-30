@@ -19,5 +19,14 @@ const createActivity = async (activity: any) => {
     }
 }
 
+const deleteActivty = async (id: number) => {
+    try {
+        const response = await axios.delete(`https://tourix-api.azurewebsites.net/Actividades/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+}
 
-export { getActivities, createActivity };
+
+export { getActivities, createActivity, deleteActivty };

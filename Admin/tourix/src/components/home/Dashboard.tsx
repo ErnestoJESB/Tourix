@@ -1,5 +1,4 @@
 import { Box } from "@mui/material";
-import TablaDemo from "./TablaDemo";
 import GeneralStats from "./GeneralStats";
 import Graphs from "./Graphs";
 

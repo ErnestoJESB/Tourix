@@ -62,7 +62,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     const [alertMessage, setAlertMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
 
-    const isFormValid = nombreAgencia !== '' && email !== '' && password !== '' && confirmPassword !== '' && telefono !== '' && direccion != '' && descripcion != '' && email.includes('@') && email.includes('.') && password === confirmPassword && nombreAgencia.trim().length > 0 && email.trim().length > 0 && password.trim().length > 0 && confirmPassword.trim().length > 0 && telefono.trim().length > 0 && direccion.trim().length > 0 && descripcion.trim().length > 0;
+    const isFormValid = nombreAgencia !== '' && email !== '' && password !== '' && confirmPassword !== '' && telefono !== '' && direccion !== '' && descripcion !== '' && email.includes('@') && email.includes('.') && password === confirmPassword && nombreAgencia.trim().length > 0 && email.trim().length > 0 && password.trim().length > 0 && confirmPassword.trim().length > 0 && telefono.trim().length > 0 && direccion.trim().length > 0 && descripcion.trim().length > 0;
 
     const handleTogglePasswordVisibility = () => {
         setShowPassword((prevShowPassword) => !prevShowPassword);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -67,7 +67,6 @@ export default function SignIn() {
     const [alertSeverity, setAlertSeverity] = useState<"success" | "error">(
         "success"
     );
-    const [isSuccess, setIsSuccess] = useState(false);
     const [alertOpen, setAlertOpen] = useState(false);
 
     const isFormValid = email !== '' && password !== '' && email.includes('@') && email.includes('.') && password.trim().length > 0 && email.trim().length > 0;
@@ -82,7 +81,6 @@ export default function SignIn() {
             const response = await login(email, password);
             setAlertOpen(true);
             setAlertMessage(response.message);
-            setIsSuccess(response.success);
             setAlertSeverity(response.success ? 'success' : 'error');
             localStorage.setItem('profile', JSON.stringify(response.result));
             if (response.success) {
@@ -92,20 +90,12 @@ export default function SignIn() {
             setAlertOpen(true);
             setAlertMessage('Error al iniciar sesión. Inténtalo de nuevo.');
             setAlertSeverity('error');
-            setIsSuccess(false);
         }
     };
 
     const handleAlertClose = () => {
         setAlertOpen(false);
     };
-
-    interface Props {
-        alertOpen: boolean;
-        alertMessage: string;
-        alertSeverity: "success" | "error" | "warning" | "info";
-        handleAlertClose: () => void;
-    }
 
     // Función para definir la dirección del Slide
     function SlideTransition(props: SlideProps) {

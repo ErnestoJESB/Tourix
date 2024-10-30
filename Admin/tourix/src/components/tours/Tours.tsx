@@ -8,6 +8,13 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import MapWithSearch from './ApiMap';
 import { createAvailability } from '../../services/AvailabilityServices';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../utils/firebaseConfig';
+import { createImage } from '../../services/ImagesServices';
 
 interface Activity {
     actividadID?: number;
@@ -39,6 +46,16 @@ const defaultActivity: Activity = {
     latitud: 0,
     longitud: 0,
 }
+
+const InputImg = styled("input")(() => ({
+    color: "black",
+    width: "100%",
+    fontSize: "12px",
+    padding: "10px",
+    background: "#f3f3f3",
+    borderRadius: "10px",
+    marginBottom: "10px",
+}));
 
 const BtnModal = styled(Button)(() => ({
     background: '#10E5A5',
@@ -73,20 +90,23 @@ export default function Tours() {
 
     const [activities, setActivities] = useState([]);
     const [selectedActivity, setSelectedActivity] = useState<Activity>(defaultActivity);
+    
     const [open, setOpen] = useState(false);
-
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     const [activeStep, setActiveStep] = useState(0);
     const [errors, setErrors] = useState<string[]>([]);
 
-    const [alertOpen, setAlertOpen] = useState(false);
-    const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
-    const [alertMessage, setAlertMessage] = useState('');
+    const [images, setImages] = useState<File[]>([]);
+    const [previews, setPreviews] = useState<string[]>([]);
 
     const [availabilities, setAvailabilities] = useState<Availability[]>([]);
     const [selectedDateTime, setSelectedDateTime] = useState<string>('');
     const [capacity, setCapacity] = useState<number>(0);
+
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
+    const [alertMessage, setAlertMessage] = useState('');
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -103,10 +123,13 @@ export default function Tours() {
             setActivities(formattedData);
         }
         catch (e) {
-            console.error(e);
+            setAlertOpen(true);
+            setAlertSeverity('error');
+            setAlertMessage('Error al cargar actividades');
         }
     }
 
+    {/* Agregar disponibilidad */ }
     const handleAddAvailability = () => {
         if (selectedDateTime && capacity > 0) {
             const newAvailability: Availability = {
@@ -134,6 +157,7 @@ export default function Tours() {
     };
 
 
+    {/* Cambiar ubicación en el mapa */ }
     const handleLocationChange = (lat: number, lng: number) => {
         setSelectedActivity(prevActivity => ({
             ...prevActivity,
@@ -141,6 +165,60 @@ export default function Tours() {
             longitud: lng
         }));
     };
+
+    {/* Cambiar imagenes */ }
+    const handleChangeImg = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const filesArray = Array.from(e.target.files);
+            setImages(filesArray);
+
+            const previewUrls = filesArray.map((file) => URL.createObjectURL(file));
+            setPreviews(previewUrls);
+        }
+    };
+
+    const handleUploadImg = async (): Promise<string[]> => {
+        const promises: Promise<string>[] = [];
+
+        images.forEach((image) => {
+            const storageRef = ref(storage, `images/${image.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, image);
+
+            const uploadPromise = new Promise<string>((resolve, reject) => {
+                uploadTask.on(
+                    "state_changed",
+                    (snapshot) => { },
+                    (error) => {
+                        console.error(error);
+                        reject(error);
+                    },
+                    async () => {
+                        try {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            resolve(downloadURL);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                );
+            });
+
+            promises.push(uploadPromise);
+        });
+
+        try {
+            const urls = await Promise.all(promises);
+            return urls;
+        } catch (error) {
+            setAlertOpen(true);
+            setAlertSeverity('error');
+            setAlertMessage('Error al subir imágenes');
+            return [];
+        }
+    };
+
+
+    {/* Validación de campos */ }
 
     const validateStep = () => {
         const stepErrors: string[] = [];
@@ -158,6 +236,7 @@ export default function Tours() {
         return stepErrors.length === 0; // Retorna true si no hay errores
     };
 
+    {/* Navegación entre pasos */ }
     const handleNext = () => {
         if (validateStep()) {
             setActiveStep((prevStep) => prevStep + 1);
@@ -167,6 +246,7 @@ export default function Tours() {
 
     const handleBack = () => setActiveStep((prevStep) => prevStep - 1);
 
+    {/* Creación de los pasos */ }
     const steps = [
         {
             label: 'Detalles de la Actividad', content: (
@@ -250,6 +330,71 @@ export default function Tours() {
             )
         },
         {
+            label: 'Imagenes', content: (
+                <Grid2 container spacing={2} padding={5} sx={{ overflow: 'scroll', maxHeight: '45vh' }}>
+                    <Typography
+                        component="h1"
+                        fontSize={15}
+                        fontWeight={600}
+                        marginBottom={1}
+                        sx={{ color: "#7d7d7d" }}
+                    >
+                        Imagen
+                    </Typography>
+                    <InputImg type="file" multiple onChange={handleChangeImg} />
+                    <Swiper
+                        spaceBetween={20}
+                        slidesPerView={1}
+                        loop={true}
+                        autoplay={{ delay: 3000 }}
+                        pagination={{
+                            dynamicBullets: true,
+                            clickable: true,
+                        }}
+                        modules={[Pagination]}
+                        breakpoints={{
+                            640: {
+                                slidesPerView: 2,
+                                spaceBetween: 20,
+                            },
+                            768: {
+                                slidesPerView: 3,
+                                spaceBetween: 30,
+                            },
+                            1024: {
+                                slidesPerView: 4,
+                                spaceBetween: 20,
+                            },
+                        }}
+                    >
+                        {previews.map((preview, index) => (
+                            <SwiperSlide key={index}>
+                                <Box sx={{ textAlign: "center" }}>
+                                    <Box
+                                        sx={{
+                                            borderRadius: "20px",
+                                            boxShadow: "0px 0px 10px #babecc",
+                                        }}
+                                    >
+                                        <img
+                                            src={preview}
+                                            alt={`Preview ${index}`}
+                                            style={{
+                                                height: "160px",
+                                                width: "100%",
+                                                objectFit: "cover",
+                                                borderRadius: "10px",
+                                            }}
+                                        />
+                                    </Box>
+                                </Box>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+                </Grid2>
+            )
+        },
+        {
             label: 'Disponibilidad', content: (
                 <Grid2 container spacing={2} padding={5} sx={{ overflow: 'scroll', maxHeight: '45vh' }}>
                     <Grid2 size={{ xs: 12, sm: 12, md: 5 }}>
@@ -300,16 +445,24 @@ export default function Tours() {
         }
     ];
 
+    {/* Funciones de creacion */ }
     const handleSave = async () => {
         try {
+            const urls = await handleUploadImg();
             const response = await createActivity(selectedActivity);
-            const AgenciaID = response.result.lastID;
-            const disponibilidad = availabilities.map((availability) => ({
-                ...availability,
-                actividadID: AgenciaID,
+            const ActividadID = response.result.lastID;
+
+            const images = urls.map((url) => ({
+                ImagenURL: url,
+                ActividadID: ActividadID,
             }));
 
-            console.log(disponibilidad);
+            await Promise.all(images.map(async (image) => await createImage(image)));
+
+            const disponibilidad = availabilities.map((availability) => ({
+                ...availability,
+                actividadID: ActividadID,
+            }));
 
             await Promise.all(disponibilidad.map((availability) => createAvailability(availability)));
 
@@ -321,13 +474,14 @@ export default function Tours() {
             setOpen(false);
         }
         catch (e) {
-            console.error(e);
             setAlertOpen(true);
             setAlertSeverity('error');
             setAlertMessage('Error al crear actividad');
         }
     }
 
+
+    {/* Columnas de la tabla */ }
     const columns: GridColDef[] = [
         {
             field: 'actividadID',
@@ -413,7 +567,7 @@ export default function Tours() {
         }
     ];
 
-    // Modal
+    {/* Modal */ }
     const openModal = () => {
         const profile = JSON.parse(localStorage.getItem('profile') || '{}');
         const agencyID = profile.id;
@@ -428,7 +582,7 @@ export default function Tours() {
         setOpen(false);
     }
 
-    // Alert
+    {/* Alerta */ }
     const handleAlertClose = () => {
         setAlertOpen(false);
     };
@@ -436,7 +590,7 @@ export default function Tours() {
         setDeleteConfirmOpen(false);
     };
 
-
+    {/* Cambiar valores de los campos */ }
     const ChangeValuesTextFields = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
         field: keyof Activity
@@ -572,7 +726,7 @@ export default function Tours() {
                             Anterior
                         </Button>
 
-                        {activeStep === 1 ? (
+                        {activeStep === 2 ? (
                             // Usa BtnModal en el último paso
                             <BtnModal onClick={handleSave}>
                                 Guardar

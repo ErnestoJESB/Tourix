@@ -1,4 +1,4 @@
-import { Box, Card, Grid2, Typography } from "@mui/material";
+import { Box, Grid2, Typography } from "@mui/material";
 import { MapsGlobal01Icon } from 'hugeicons-react';
 
 export default function GeneralStats() {

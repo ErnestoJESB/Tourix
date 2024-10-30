@@ -17,3 +17,7 @@
 .bg-white {
   background-color: #fff !important;
 }
+
+.pac-container {
+  z-index: 10000 !important;
+}

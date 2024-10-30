@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { Box, Grid2 } from '@mui/material';
+import { Grid2 } from '@mui/material';
 
 export default function Graphs() {
     return (

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { GoogleMap, useLoadScript, Autocomplete, Marker, Libraries } from "@react-google-maps/api";
-import { TextField, Box, CircularProgress, Typography } from "@mui/material";
+import { TextField, Box, CircularProgress } from "@mui/material";
 
 const libraries: Libraries = ["places"];
 

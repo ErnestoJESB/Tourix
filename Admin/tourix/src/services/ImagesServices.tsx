@@ -12,7 +12,7 @@ const getImages = async (ID: number) => {
 
 const createImage = async (Image: any) => {
     try {
-        const response = await axios.post("https://tourix-api.azurewebsites.net/ImagenesActividades", { Image });
+        const response = await axios.post("https://tourix-api.azurewebsites.net/ImagenesActividades", Image);
         return response.data;
     }
     catch (error) {

@@ -90,8 +90,10 @@ export default function Tours() {
 
     const [activities, setActivities] = useState([]);
     const [selectedActivity, setSelectedActivity] = useState<Activity>(defaultActivity);
-    
+
     const [open, setOpen] = useState(false);
+
+    const [seeActivity, setSeeActivity] = useState<boolean>(false);
 
     const [activeStep, setActiveStep] = useState(0);
     const [errors, setErrors] = useState<string[]>([]);
@@ -131,7 +133,7 @@ export default function Tours() {
         }
     }
 
-    {/* Agregar disponibilidad */ }
+    /* Agregar disponibilidad */ 
     const handleAddAvailability = () => {
         if (selectedDateTime && capacity > 0) {
             const newAvailability: Availability = {
@@ -158,8 +160,7 @@ export default function Tours() {
         setCapacity(parseInt(event.target.value, 10));
     };
 
-
-    {/* Cambiar ubicación en el mapa */ }
+    /* Cambiar ubicación en el mapa */ 
     const handleLocationChange = (lat: number, lng: number) => {
         setSelectedActivity(prevActivity => ({
             ...prevActivity,
@@ -168,7 +169,7 @@ export default function Tours() {
         }));
     };
 
-    {/* Cambiar imagenes */ }
+    /* Cambiar imagenes */ 
     const handleChangeImg = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const filesArray = Array.from(e.target.files);
@@ -219,8 +220,7 @@ export default function Tours() {
         }
     };
 
-
-    {/* Validación de campos */ }
+    /* Validación de campos */ 
 
     const validateStep = () => {
         const stepErrors: string[] = [];
@@ -238,7 +238,7 @@ export default function Tours() {
         return stepErrors.length === 0; // Retorna true si no hay errores
     };
 
-    {/* Navegación entre pasos */ }
+    /* Navegación entre pasos */ 
     const handleNext = () => {
         if (validateStep()) {
             setActiveStep((prevStep) => prevStep + 1);
@@ -248,7 +248,7 @@ export default function Tours() {
 
     const handleBack = () => setActiveStep((prevStep) => prevStep - 1);
 
-    {/* Creación de los pasos */ }
+    /* Creación de los pasos */ 
     const steps = [
         {
             label: 'Detalles de la Actividad', content: (
@@ -264,6 +264,7 @@ export default function Tours() {
                                 margin="normal"
                                 value={selectedActivity.nombreActividad}
                                 onChange={(e) => setSelectedActivity({ ...selectedActivity, nombreActividad: e.target.value })}
+                                disabled={seeActivity}
                             />
                         </Box>
                     </Grid2>
@@ -279,6 +280,7 @@ export default function Tours() {
                                 margin="normal"
                                 value={selectedActivity.precio}
                                 onChange={(e) => ChangeValuesTextFields(e, "precio")}
+                                disabled={seeActivity}
                             />
                         </Box>
                     </Grid2>
@@ -294,6 +296,7 @@ export default function Tours() {
                                 margin="normal"
                                 value={selectedActivity.duracion}
                                 onChange={(e) => ChangeValuesTextFields(e, "duracion")}
+                                disabled={seeActivity}
                             />
                         </Box>
                     </Grid2>
@@ -308,6 +311,7 @@ export default function Tours() {
                                 margin="normal"
                                 value={selectedActivity.direccion}
                                 onChange={(e) => setSelectedActivity({ ...selectedActivity, direccion: e.target.value })}
+                                disabled={seeActivity}
                             />
                         </Box>
                     </Grid2>
@@ -322,11 +326,19 @@ export default function Tours() {
                                 margin="normal"
                                 value={selectedActivity.descripcion}
                                 onChange={(e) => setSelectedActivity({ ...selectedActivity, descripcion: e.target.value })}
+                                disabled={seeActivity}
                             />
                         </Box>
                     </Grid2>
                     <Grid2 size={{ xs: 12, sm: 12, md: 12 }}>
-                        <MapWithSearch apiKey="AIzaSyA6a9SUy0bmtZrhMtCWHMuOV6l_gcP0r18" onLocationChange={handleLocationChange} />
+                        <MapWithSearch
+                            apiKey="AIzaSyA6a9SUy0bmtZrhMtCWHMuOV6l_gcP0r18"
+                            onLocationChange={handleLocationChange}
+                            latitud={selectedActivity.latitud}
+                            longitud={selectedActivity.longitud}
+                            zoom={seeActivity ? 18 : 12}
+                            displaySearch={!seeActivity}
+                        />
                     </Grid2>
                 </Grid2>
             )
@@ -447,7 +459,7 @@ export default function Tours() {
         }
     ];
 
-    {/* Funciones de creacion */ }
+    /* Funciones de creacion */ 
     const handleSave = async () => {
         try {
             const urls = await handleUploadImg();
@@ -482,10 +494,9 @@ export default function Tours() {
         }
     }
 
+    /* Funciones de eliminación */
 
-    {/* Funciones de eliminación */ }
-
-    const handleDeleteConfirmOpen = (id:number) => {
+    const handleDeleteConfirmOpen = (id: number) => {
         setDeleteProductId(id);
         setDeleteConfirmOpen(true);
     }
@@ -499,7 +510,7 @@ export default function Tours() {
             await deleteActivty(deleteProductId!);
             setAlertSeverity('success');
             setAlertMessage('Actividad eliminada correctamente');
-            await fetchData();  
+            await fetchData();
         }
         catch (e) {
             setAlertSeverity('error');
@@ -509,7 +520,7 @@ export default function Tours() {
         setDeleteConfirmOpen(false);
     }
 
-    {/* Columnas de la tabla */ }
+    /* Columnas de la tabla */ 
     const columns: GridColDef[] = [
         {
             field: 'actividadID',
@@ -567,6 +578,11 @@ export default function Tours() {
                         size="small"
                         color="secondary"
                         style={{ borderRadius: '20px' }}
+                        onClick={() => {
+                            setSeeActivity(true);
+                            setSelectedActivity(params.row);
+                            setOpen(true);
+                        }}
                     >
                         <ViewIcon />
                     </Button>
@@ -575,7 +591,7 @@ export default function Tours() {
                         color="info"
                         size="small"
                         style={{ borderRadius: '20px' }}
-                        onClick={() => setOpen(true)}
+                        // onClick={() => setOpen(true)}
                     >
                         <PencilEdit02Icon />
                     </Button>
@@ -593,13 +609,15 @@ export default function Tours() {
         }
     ];
 
-    {/* Modal */ }
+    /* Modal */ 
     const openModal = () => {
         const profile = JSON.parse(localStorage.getItem('profile') || '{}');
         const agencyID = profile.id;
         setSelectedActivity({ ...selectedActivity, agenciaID: agencyID });
+        console.log(selectedActivity);
         setActiveStep(0);
         setAvailabilities([]);
+        setSeeActivity(false);
         setOpen(true);
     }
 
@@ -608,13 +626,13 @@ export default function Tours() {
         setOpen(false);
     }
 
-    {/* Alerta */ }
+    /* Alerta */ 
     const handleAlertClose = () => {
         setAlertOpen(false);
     };
-    
 
-    {/* Cambiar valores de los campos */ }
+
+    /* Cambiar valores de los campos */ 
     const ChangeValuesTextFields = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
         field: keyof Activity

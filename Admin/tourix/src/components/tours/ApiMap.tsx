@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { GoogleMap, useLoadScript, Autocomplete, Marker, Libraries } from "@react-google-maps/api";
+import { GoogleMap, useLoadScript, Autocomplete, Libraries, MarkerF } from "@react-google-maps/api";
 import { TextField, Box, CircularProgress } from "@mui/material";
 
 const libraries: Libraries = ["places"];
@@ -7,11 +7,6 @@ const libraries: Libraries = ["places"];
 const mapContainerStyle = {
     width: "100%",
     height: "400px",
-};
-
-const center = {
-    lat: 21.161908, 
-    lng: -86.8515279,
 };
 
 const options = {
@@ -22,19 +17,29 @@ const options = {
 interface MapWithSearchProps {
     apiKey: string;
     onLocationChange: (lat: number, lng: number) => void;
+    latitud: number;
+    longitud: number;
+    zoom?: number;
+    displaySearch?: boolean;
 }
 
-const MapWithSearch: React.FC<MapWithSearchProps> = ({ apiKey, onLocationChange }) => {
+const MapWithSearch: React.FC<MapWithSearchProps> = ({ apiKey, onLocationChange, latitud, longitud, zoom, displaySearch }) => {
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: apiKey,
         libraries,
     });
 
+
+    const center = {
+        lat: latitud !== 0 ? latitud : 21.1526399,  
+        lng: longitud !== 0 ? longitud : -86.8515279,
+    };
+
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
     // Estado para almacenar la posición del marcador
-    const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
+    const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number }>(center);
 
     // Función que se ejecuta cuando el mapa se carga
     const onLoad = (mapInstance: google.maps.Map) => {
@@ -86,7 +91,7 @@ const MapWithSearch: React.FC<MapWithSearchProps> = ({ apiKey, onLocationChange 
             alignItems: "center",
             gap: 2,
         }}>
-            <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px' }}>    
+            <Box sx={{ background: 'white', padding: '15px', boxShadow: '0 0 5px #d3d3d3', borderRadius: '15px', display: displaySearch ? 'block' : 'none' }}>    
                 {/* Buscador de Localidades */}
                 <Autocomplete
                     onLoad={onAutocompleteLoad}
@@ -104,19 +109,16 @@ const MapWithSearch: React.FC<MapWithSearchProps> = ({ apiKey, onLocationChange 
             {/* Mapa de Google */}
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
-                zoom={12}
+                zoom={zoom}
                 center={center}
                 options={options}
                 onLoad={onLoad}
             >
-                {/* Colocamos un marcador en la posición seleccionada si existe */}
-                {markerPosition && (
-                    <Marker
-                        position={markerPosition}
-                        draggable={true} // Permite que el marcador sea movible
-                        onDragEnd={handleMarkerDragEnd} // Evento cuando el usuario suelta el marcador
-                    />
-                )}
+                <MarkerF 
+                    position={markerPosition}
+                    draggable={displaySearch}
+                    onDragEnd={handleMarkerDragEnd}
+                />
             </GoogleMap>
         </Box>
     );

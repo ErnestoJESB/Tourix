@@ -1,9 +1,9 @@
 import axios from 'axios';
-
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const getActivities = async (id:number) => {
     try {
-        const response = await axios.get(`https://tourix-api.azurewebsites.net/Actividades/Agencia/${id}`);
+        const response = await axios.get(`${apiUrl}/Actividades/Agencia/${id}`);
         return response.data.result;
     } catch (error) {
         console.error(error);
@@ -12,7 +12,7 @@ const getActivities = async (id:number) => {
 
 const createActivity = async (activity: any) => {
     try {
-        const response = await axios.post("https://tourix-api.azurewebsites.net/Actividades", activity);
+        const response = await axios.post(`${apiUrl}/Actividades`, activity);
         return response.data;
     } catch (error) {
         console.error(error);
@@ -21,7 +21,7 @@ const createActivity = async (activity: any) => {
 
 const deleteActivty = async (id: number) => {
     try {
-        const response = await axios.delete(`https://tourix-api.azurewebsites.net/Actividades/${id}`);
+        const response = await axios.delete(`${apiUrl}/Actividades/${id}`);
         return response.data;
     } catch (error) {
         console.error(error);

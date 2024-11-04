@@ -184,7 +184,7 @@ export default function Tours() {
         const promises: Promise<string>[] = [];
 
         images.forEach((image) => {
-            const storageRef = ref(storage, `images/${image.name}`);
+            const storageRef = ref(storage, `Tourix/${image.name}`);
             const uploadTask = uploadBytesResumable(storageRef, image);
 
             const uploadPromise = new Promise<string>((resolve, reject) => {

@@ -1,8 +1,9 @@
 import axios from "axios";
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const getImages = async (ID: number) => {
     try {
-        const response = await axios.get(`https://tourix-api.azurewebsites.net/ImagenesActividades/${ID}`);
+        const response = await axios.get(`${apiUrl}/ImagenesActividades/${ID}`);
         return response.data.result;
     }
     catch (error) {
@@ -12,7 +13,7 @@ const getImages = async (ID: number) => {
 
 const createImage = async (Image: any) => {
     try {
-        const response = await axios.post("https://tourix-api.azurewebsites.net/ImagenesActividades", Image);
+        const response = await axios.post(`${apiUrl}/ImagenesActividades`, Image);
         return response.data;
     }
     catch (error) {

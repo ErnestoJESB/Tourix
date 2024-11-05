@@ -7,14 +7,14 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import MapWithSearch from './ApiMap';
-import { createAvailability } from '../../services/AvailabilityServices';
+import { createAvailability, getAvailabilityById } from '../../services/AvailabilityServices';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../utils/firebaseConfig';
-import { createImage } from '../../services/ImagesServices';
+import { createImage, getImages } from '../../services/ImagesServices';
 
 interface Activity {
     actividadID?: number;
@@ -31,7 +31,8 @@ interface Activity {
 interface Availability {
     disponibilidadID?: number;
     actividadID?: number;
-    cupoMaximo: number;
+    cupoMaximo?: number;
+    cupoRestante?: number;
     fechaHora: string;
 }
 
@@ -160,6 +161,17 @@ export default function Tours() {
         setCapacity(parseInt(event.target.value, 10));
     };
 
+    const handleGetAvailability = async (id: number) => {
+        try {
+            const response = await getAvailabilityById(id);
+            setAvailabilities(response);
+        } catch (error) {
+            setAlertOpen(true);
+            setAlertSeverity('error');
+            setAlertMessage('Error al obtener disponibilidades');
+        }
+    }
+
     /* Cambiar ubicación en el mapa */ 
     const handleLocationChange = (lat: number, lng: number) => {
         setSelectedActivity(prevActivity => ({
@@ -219,6 +231,19 @@ export default function Tours() {
             return [];
         }
     };
+
+    const handleGetImages = async (id: number) => {
+        try {
+            const response = await getImages(id);
+            const previews = response.map((image: any) => image.imagenURL);
+            setPreviews(previews);
+        } catch (error) {
+            setAlertOpen(true);
+            setAlertSeverity('error');
+            setAlertMessage('Error al obtener imágenes');
+            return [];
+        }
+    }
 
     /* Validación de campos */ 
 
@@ -353,9 +378,9 @@ export default function Tours() {
                         marginBottom={1}
                         sx={{ color: "#7d7d7d" }}
                     >
-                        Imagen
+                        Imagenes
                     </Typography>
-                    <InputImg type="file" multiple onChange={handleChangeImg} />
+                    <InputImg type="file" multiple onChange={handleChangeImg} hidden = {seeActivity} />
                     <Swiper
                         spaceBetween={20}
                         slidesPerView={1}
@@ -411,7 +436,7 @@ export default function Tours() {
         {
             label: 'Disponibilidad', content: (
                 <Grid2 container spacing={2} padding={5} sx={{ overflow: 'scroll', maxHeight: '45vh' }}>
-                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }}>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }} display={seeActivity ? 'none' : 'flex'}>
                         <Typography component="h2" fontSize={20} fontWeight={600} marginBottom={2}>
                             Selecciona la Fecha y Hora
                         </Typography>
@@ -423,7 +448,7 @@ export default function Tours() {
                             onChange={handleDateTimeChange}
                         />
                     </Grid2>
-                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }}>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }} display={seeActivity ? 'none' : 'flex'}>
                         <Typography component="h2" fontSize={20} fontWeight={600} marginBottom={2}>
                             Cupo
                         </Typography>
@@ -436,7 +461,7 @@ export default function Tours() {
                         />
                     </Grid2>
                     <Grid2 size={{ xs: 12, sm: 12, md: 2 }} sx={{
-                        display: 'flex',
+                        display: seeActivity ? 'none' : 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                     }}>
@@ -446,11 +471,11 @@ export default function Tours() {
                     </Grid2>
                     <Grid2 size={{ xs: 12 }}>
                         <Typography component="h2" fontSize={20} fontWeight={600} marginTop={2}>
-                            Disponibilidades Agregadas
+                            {seeActivity ? 'Disponibilidad' : 'Disponibilidades agregadas'}
                         </Typography>
                         {availabilities.map((availability, index) => (
                             <Typography key={index}>
-                                Fecha y Hora: {availability.fechaHora} - Cupo: {availability.cupoMaximo}
+                                Fecha y Hora: {availability.fechaHora} - Cupo: {seeActivity ? availability.cupoRestante : availability.cupoMaximo}
                             </Typography>
                         ))}
                     </Grid2>
@@ -581,6 +606,8 @@ export default function Tours() {
                         onClick={() => {
                             setSeeActivity(true);
                             setSelectedActivity(params.row);
+                            handleGetImages(params.row.actividadID);
+                            handleGetAvailability(params.row.actividadID);
                             setOpen(true);
                         }}
                     >
@@ -623,6 +650,11 @@ export default function Tours() {
 
     const CloseModal = () => {
         setSelectedActivity(defaultActivity);
+        setPreviews([]);
+        setImages([]);
+        setAvailabilities([]);
+        setCapacity(0);
+        setActiveStep(0);
         setOpen(false);
     }
 
@@ -770,8 +802,8 @@ export default function Tours() {
 
                         {activeStep === 2 ? (
                             // Usa BtnModal en el último paso
-                            <BtnModal onClick={handleSave}>
-                                Guardar
+                            <BtnModal onClick={seeActivity ? CloseModal : handleSave}>
+                                {seeActivity ? 'Cerrar' : 'Guardar'}
                             </BtnModal>
                         ) : (
                             // Usa Button en los demás pasos

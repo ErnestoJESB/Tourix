@@ -10,4 +10,13 @@ const createAvailability = async (availability: any) => {
     }
 }
 
-export { createAvailability };
+const getAvailabilityById = async (id: number) => {
+    try {
+        const response = await axios.get(`${apiUrl}/DisponibilidadActividades/${id}`);
+        return response.data.result;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export { createAvailability, getAvailabilityById };

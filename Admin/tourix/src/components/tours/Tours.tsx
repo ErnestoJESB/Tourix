@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid2, Modal, Paper, Snackbar, styled, TextField, Typography } from '@mui/material';
-import { createActivity, deleteActivty, getActivities } from '../../services/ActivityServices';
+import { createActivity, deleteActivty, editActivity, getActivities } from '../../services/ActivityServices';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Delete02Icon, PencilEdit02Icon, ViewIcon, TaskAdd02Icon, Cancel01Icon } from 'hugeicons-react';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import MapWithSearch from './ApiMap';
-import { createAvailability, getAvailabilityById } from '../../services/AvailabilityServices';
+import { createAvailability, deleteAvailabilities, getAvailabilityById } from '../../services/AvailabilityServices';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from "swiper/modules";
 import "swiper/css";
@@ -94,6 +94,8 @@ export default function Tours() {
 
     const [open, setOpen] = useState(false);
 
+    const [seending, setSeending] = useState<boolean>(false);
+
     const [seeActivity, setSeeActivity] = useState<boolean>(false);
 
     const [activeStep, setActiveStep] = useState(0);
@@ -134,11 +136,12 @@ export default function Tours() {
         }
     }
 
-    /* Agregar disponibilidad */ 
+    /* Funciones de disponibilidad */
     const handleAddAvailability = () => {
         if (selectedDateTime && capacity > 0) {
             const newAvailability: Availability = {
                 cupoMaximo: capacity,
+                cupoRestante: capacity,
                 fechaHora: selectedDateTime,
             };
 
@@ -152,6 +155,12 @@ export default function Tours() {
             setAlertMessage('Fecha y hora y cupo son obligatorios');
         }
     };
+
+    const handleRemoveAvailability = (index: any) => {
+        const updatedAvailabilities = availabilities.filter((_, i) => i !== index);
+        setAvailabilities(updatedAvailabilities);
+    };
+
 
     const handleDateTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedDateTime(event.target.value);
@@ -172,7 +181,7 @@ export default function Tours() {
         }
     }
 
-    /* Cambiar ubicación en el mapa */ 
+    /* Cambiar ubicación en el mapa */
     const handleLocationChange = (lat: number, lng: number) => {
         setSelectedActivity(prevActivity => ({
             ...prevActivity,
@@ -181,7 +190,7 @@ export default function Tours() {
         }));
     };
 
-    /* Cambiar imagenes */ 
+    /* Cambiar imagenes */
     const handleChangeImg = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const filesArray = Array.from(e.target.files);
@@ -245,7 +254,7 @@ export default function Tours() {
         }
     }
 
-    /* Validación de campos */ 
+    /* Validación de campos */
 
     const validateStep = () => {
         const stepErrors: string[] = [];
@@ -263,7 +272,7 @@ export default function Tours() {
         return stepErrors.length === 0; // Retorna true si no hay errores
     };
 
-    /* Navegación entre pasos */ 
+    /* Navegación entre pasos */
     const handleNext = () => {
         if (validateStep()) {
             setActiveStep((prevStep) => prevStep + 1);
@@ -273,7 +282,7 @@ export default function Tours() {
 
     const handleBack = () => setActiveStep((prevStep) => prevStep - 1);
 
-    /* Creación de los pasos */ 
+    /* Creación de los pasos */
     const steps = [
         {
             label: 'Detalles de la Actividad', content: (
@@ -380,7 +389,7 @@ export default function Tours() {
                     >
                         Imagenes
                     </Typography>
-                    <InputImg type="file" multiple onChange={handleChangeImg} hidden = {seeActivity} />
+                    <InputImg type="file" multiple onChange={handleChangeImg} hidden={seeActivity} />
                     <Swiper
                         spaceBetween={20}
                         slidesPerView={1}
@@ -436,7 +445,7 @@ export default function Tours() {
         {
             label: 'Disponibilidad', content: (
                 <Grid2 container spacing={2} padding={5} sx={{ overflow: 'scroll', maxHeight: '45vh' }}>
-                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }} display={seeActivity ? 'none' : 'flex'}>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }} display={seeActivity ? 'none' : 'grid'}>
                         <Typography component="h2" fontSize={20} fontWeight={600} marginBottom={2}>
                             Selecciona la Fecha y Hora
                         </Typography>
@@ -448,7 +457,7 @@ export default function Tours() {
                             onChange={handleDateTimeChange}
                         />
                     </Grid2>
-                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }} display={seeActivity ? 'none' : 'flex'}>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 5 }} display={seeActivity ? 'none' : 'grid'}>
                         <Typography component="h2" fontSize={20} fontWeight={600} marginBottom={2}>
                             Cupo
                         </Typography>
@@ -461,7 +470,7 @@ export default function Tours() {
                         />
                     </Grid2>
                     <Grid2 size={{ xs: 12, sm: 12, md: 2 }} sx={{
-                        display: seeActivity ? 'none' : 'flex',
+                        display: seeActivity ? 'none' : 'grid',
                         flexDirection: 'column',
                         justifyContent: 'center',
                     }}>
@@ -474,9 +483,20 @@ export default function Tours() {
                             {seeActivity ? 'Disponibilidad' : 'Disponibilidades agregadas'}
                         </Typography>
                         {availabilities.map((availability, index) => (
-                            <Typography key={index}>
-                                Fecha y Hora: {availability.fechaHora} - Cupo: {seeActivity ? availability.cupoRestante : availability.cupoMaximo}
-                            </Typography>
+                            <Box key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                <Typography style={{ flexGrow: 1 }}>
+                                    Fecha y Hora: {availability.fechaHora} - Cupo: {seeActivity ? availability.cupoRestante : selectedActivity.actividadID !== 0 ? availability.cupoRestante : availability.cupoMaximo}
+                                </Typography>
+                                {!seeActivity && (
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        onClick={() => handleRemoveAvailability(index)}
+                                    >
+                                        Eliminar
+                                    </Button>
+                                )}
+                            </Box>
                         ))}
                     </Grid2>
                 </Grid2>
@@ -484,9 +504,10 @@ export default function Tours() {
         }
     ];
 
-    /* Funciones de creacion */ 
+    /* Funciones de creacion */
     const handleSave = async () => {
         try {
+            setSeending(true);
             const urls = await handleUploadImg();
             const response = await createActivity(selectedActivity);
             const ActividadID = response.result.lastID;
@@ -519,6 +540,48 @@ export default function Tours() {
         }
     }
 
+
+    /* Funciones de edición */
+    const handleEdit = async () => {
+        if (activeStep == 0) {
+            try {
+                setSeending(true);
+                await editActivity(selectedActivity);
+                setAlertOpen(true);
+                setAlertSeverity('success');
+                setAlertMessage('Detalles de la actividad editada correctamente');
+                await fetchData();
+                setSeending(false);
+            }
+            catch (e) {
+                setAlertOpen(true);
+                setAlertSeverity('error');
+                setAlertMessage('Error al editar detalles de actividad');
+            }
+        }
+        if (activeStep == 2) {
+            try {
+                setSeending(true);
+                await deleteAvailabilities(selectedActivity.actividadID!);
+                const disponibilidad = availabilities.map((availability) => ({
+                    ...availability,
+                    actividadID: selectedActivity.actividadID,
+                }));
+                await Promise.all(disponibilidad.map((availability) => createAvailability(availability)));
+                setAlertOpen(true);
+                setAlertSeverity('success');
+                setAlertMessage('Disponibilidad editada correctamente');
+                setSeending(false);
+            }
+            catch (e) {
+                setAlertOpen(true);
+                setAlertSeverity('error');
+                setAlertMessage('Error al editar disponibilidad');
+            }
+        }
+
+    }
+
     /* Funciones de eliminación */
 
     const handleDeleteConfirmOpen = (id: number) => {
@@ -545,7 +608,7 @@ export default function Tours() {
         setDeleteConfirmOpen(false);
     }
 
-    /* Columnas de la tabla */ 
+    /* Columnas de la tabla */
     const columns: GridColDef[] = [
         {
             field: 'actividadID',
@@ -605,6 +668,8 @@ export default function Tours() {
                         style={{ borderRadius: '20px' }}
                         onClick={() => {
                             setSeeActivity(true);
+                            setActiveStep(0);
+                            setSeending(false);
                             setSelectedActivity(params.row);
                             handleGetImages(params.row.actividadID);
                             handleGetAvailability(params.row.actividadID);
@@ -618,7 +683,15 @@ export default function Tours() {
                         color="info"
                         size="small"
                         style={{ borderRadius: '20px' }}
-                        // onClick={() => setOpen(true)}
+                        onClick={() => {
+                            setSeeActivity(false);
+                            setActiveStep(0);
+                            setSeending(false);
+                            setSelectedActivity(params.row);
+                            handleGetImages(params.row.actividadID);
+                            handleGetAvailability(params.row.actividadID);
+                            setOpen(true);
+                        }}
                     >
                         <PencilEdit02Icon />
                     </Button>
@@ -636,13 +709,14 @@ export default function Tours() {
         }
     ];
 
-    /* Modal */ 
+    /* Modal */
     const openModal = () => {
+        setSeending(false);
         const profile = JSON.parse(localStorage.getItem('profile') || '{}');
         const agencyID = profile.id;
         setSelectedActivity({ ...selectedActivity, agenciaID: agencyID });
-        console.log(selectedActivity);
         setActiveStep(0);
+        setPreviews([]);
         setAvailabilities([]);
         setSeeActivity(false);
         setOpen(true);
@@ -658,13 +732,13 @@ export default function Tours() {
         setOpen(false);
     }
 
-    /* Alerta */ 
+    /* Alerta */
     const handleAlertClose = () => {
         setAlertOpen(false);
     };
 
 
-    /* Cambiar valores de los campos */ 
+    /* Cambiar valores de los campos */
     const ChangeValuesTextFields = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
         field: keyof Activity
@@ -800,9 +874,20 @@ export default function Tours() {
                             Anterior
                         </Button>
 
+                        {selectedActivity.actividadID !== 0 && activeStep != 2 && !seeActivity ? (
+                            <BtnModal onClick={handleEdit} disabled={seending}>
+                                Guardar
+                            </BtnModal>
+                        ) : (
+                            <></>
+                        )}
+
                         {activeStep === 2 ? (
                             // Usa BtnModal en el último paso
-                            <BtnModal onClick={seeActivity ? CloseModal : handleSave}>
+                            <BtnModal
+                                onClick={seeActivity ? CloseModal : selectedActivity.actividadID !== 0 ? handleEdit : handleSave}
+                                disabled={seending}
+                            >
                                 {seeActivity ? 'Cerrar' : 'Guardar'}
                             </BtnModal>
                         ) : (

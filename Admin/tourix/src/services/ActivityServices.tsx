@@ -19,6 +19,15 @@ const createActivity = async (activity: any) => {
     }
 }
 
+const editActivity = async (activity: any) => {
+    try {
+        const response = await axios.put(`${apiUrl}/Actividades/${activity.actividadID}`, activity);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 const deleteActivty = async (id: number) => {
     try {
         const response = await axios.delete(`${apiUrl}/Actividades/${id}`);
@@ -29,4 +38,4 @@ const deleteActivty = async (id: number) => {
 }
 
 
-export { getActivities, createActivity, deleteActivty };
+export { getActivities, createActivity, editActivity, deleteActivty };

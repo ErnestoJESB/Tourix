@@ -22,8 +22,6 @@ import { Home11Icon, Logout01Icon, MapsGlobal01Icon, GridViewIcon } from 'hugeic
 
 import { useNavigate } from "react-router-dom";
 
-const Agencia = localStorage.getItem("profile") ? JSON.parse(localStorage.getItem("profile") as string) : null;
-
 const drawerWidth = 240;
 
 const openedMixin = (theme: Theme): CSSObject => ({
@@ -99,6 +97,11 @@ export default function HeaderAdmin() {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
 
+    const [agencia, setAgencia] = React.useState(() => {
+        return localStorage.getItem("profile") ? JSON.parse(localStorage.getItem("profile") as string) : null;
+    });
+    
+
     const handleDrawerOpen = () => {
         setOpen(true);
     };
@@ -112,6 +115,19 @@ export default function HeaderAdmin() {
         localStorage.removeItem("profile");
         navigate("/sign-in");
     };
+
+
+    React.useEffect(() => {
+        const handleStorageChange = () => {
+            const profile = localStorage.getItem("profile");
+            setAgencia(profile ? JSON.parse(profile) : null);
+        };
+    
+        window.addEventListener("storage", handleStorageChange);
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    }, []);
 
     return (
         <Box sx={{ display: "flex" }}>
@@ -131,7 +147,7 @@ export default function HeaderAdmin() {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h1" fontSize={30} noWrap component="div">
-                        Dashboard  - {Agencia?.nombre}
+                        Dashboard  - {agencia?.nombre}
                     </Typography>
                 </Toolbar>
                 <Button

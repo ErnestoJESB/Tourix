@@ -19,4 +19,13 @@ const getAvailabilityById = async (id: number) => {
     }
 }
 
-export { createAvailability, getAvailabilityById };
+const deleteAvailabilities = async (id: number) => {
+    try {
+        const response = await axios.delete(`${apiUrl}/DisponibilidadActividades/${id}`);
+        return response.data.result;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export { createAvailability, getAvailabilityById, deleteAvailabilities };

@@ -67,6 +67,11 @@ const BtnModal = styled(Button)(() => ({
     '&:hover': {
         background: '#2C2C54',
         color: 'white',
+    },
+    '&:disabled': {
+        backgroundColor: '#A0A0A0',
+        color: '#000',
+        cursor: 'not-allowed',
     }
 }));
 
@@ -543,7 +548,7 @@ export default function Tours() {
 
     /* Funciones de edición */
     const handleEdit = async () => {
-        if (activeStep == 0) {
+        if (activeStep === 0) {
             try {
                 setSeending(true);
                 await editActivity(selectedActivity);
@@ -559,7 +564,7 @@ export default function Tours() {
                 setAlertMessage('Error al editar detalles de actividad');
             }
         }
-        if (activeStep == 2) {
+        if (activeStep === 2) {
             try {
                 setSeending(true);
                 await deleteAvailabilities(selectedActivity.actividadID!);
@@ -806,6 +811,14 @@ export default function Tours() {
                                 pageSize: 5,
                             },
                         },
+                        sorting: {
+                            sortModel: [
+                                {
+                                    field: 'actividadID',
+                                    sort: 'desc',
+                                },
+                            ],
+                        }
                     }}
                     pageSizeOptions={[5]}
                 />
@@ -874,7 +887,7 @@ export default function Tours() {
                             Anterior
                         </Button>
 
-                        {selectedActivity.actividadID !== 0 && activeStep != 2 && !seeActivity ? (
+                        {selectedActivity.actividadID !== 0 && activeStep !== 2 && !seeActivity ? (
                             <BtnModal onClick={handleEdit} disabled={seending}>
                                 Guardar
                             </BtnModal>

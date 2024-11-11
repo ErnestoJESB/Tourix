@@ -833,7 +833,7 @@ export default function Tours() {
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         width: '80%',
-                        height: '80%',
+                        height: '90%',
                         background: '#f3f4f9',
                         borderRadius: '15px',
                         boxShadow: '0 0 10px black',

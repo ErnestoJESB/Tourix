@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid2, MenuItem, Modal, Paper, Snackbar, styled, TextField, Typography } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Delete02Icon, PencilEdit02Icon, ViewIcon, Cancel01Icon } from 'hugeicons-react';
-import { getReservations } from '../../services/ReservationServices';
+import { deleteReservation, getReservations, updateReservation } from '../../services/ReservationServices';
 
 interface Reservation {
     reservacionID: number;
@@ -24,7 +24,12 @@ const BtnModal = styled(Button)(() => ({
     '&:hover': {
         background: '#2C2C54',
         color: 'white',
-    }
+    },
+    '&:disabled': {
+        backgroundColor: '#A0A0A0',
+        color: '#000',
+        cursor: 'not-allowed',
+    },
 }));
 
 const CustomTextField = styled(TextField)({
@@ -60,7 +65,10 @@ export default function Packages() {
     const [reservations, setReservations] = useState([]);
     const [parsedReservations, setParsedReservations] = useState([]);
     const [selectedReservation, setSelectedReservation] = useState<Reservation>(defaultReservation)
+    const [deleteReservationID, setDeleteReservationID] = useState<number | null>(null);
     const [open, setOpen] = useState(false);
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const [seeReservation, setSeeReservation] = useState(false);
 
@@ -94,6 +102,27 @@ export default function Packages() {
             setAlertOpen(true);
             setAlertSeverity('error');
             setAlertMessage('Ocurrió un error al cargar las reservaciones');
+        }
+    }
+
+    const handleEdit = async () => {
+        setIsLoading(true);
+        try {
+            const id = selectedReservation.reservacionID;
+            await updateReservation(id, JSON.stringify(selectedReservation.estado));
+            setAlertOpen(true);
+            setAlertSeverity('success');
+            setAlertMessage('Reservación editada correctamente');
+            setOpen(false);
+            fetchData();
+        }
+        catch (e) {
+            setAlertOpen(true);
+            setAlertSeverity('error');
+            setAlertMessage('Ocurrió un error al editar la reservación');
+        }
+        finally {
+            setIsLoading(false);
         }
     }
 
@@ -148,6 +177,7 @@ export default function Packages() {
                         color="error"
                         size="small"
                         style={{ borderRadius: '20px' }}
+                        onClick={() => handleDeleteConfirmOpen(params.row.reservacionID)}
                     >
                         <Delete02Icon />
                     </Button>
@@ -156,6 +186,32 @@ export default function Packages() {
         }
 
     ];
+
+    const handleDeleteConfirmOpen = (id:number) => {
+        setDeleteReservationID(id);
+        setDeleteConfirmOpen(true);
+    }
+
+    const handleDeleteConfirmClose = () => {
+        setDeleteConfirmOpen(false);
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteReservation(deleteReservationID!);
+            setAlertSeverity('success');
+            setAlertMessage('Actividad eliminada correctamente');
+            await fetchData();
+        }
+        catch (e) {
+            setAlertSeverity('error');
+            setAlertMessage('Error al eliminar actividad');
+        }
+        finally {
+            setAlertOpen(true);
+            setDeleteConfirmOpen(false);
+        }
+    }
 
     // Modal
     const CloseModal = () => {
@@ -168,9 +224,7 @@ export default function Packages() {
     const handleAlertClose = () => {
         setAlertOpen(false);
     };
-    const handleDeleteConfirmClose = () => {
-        setDeleteConfirmOpen(false);
-    };
+    
 
     return (
         <Box
@@ -185,7 +239,7 @@ export default function Packages() {
         >
             <Box paddingBottom={3}>
                 <Grid2 container spacing={2} justifyContent={'center'} textAlign={{ xs: 'center', sm: 'center', md: 'left' }}>
-                    <Grid2 size={{ xs: 12, sm: 12, md: 10 }}>
+                    <Grid2 size={{ xs: 12, sm: 12, md: 12 }}>
                         <Typography component="h1" fontSize={40} fontWeight={'bold'} marginBottom={2}>
                             Reservaciones
                         </Typography>
@@ -204,6 +258,14 @@ export default function Packages() {
                                 pageSize: 5,
                             },
                         },
+                        sorting: {
+                            sortModel: [
+                                {
+                                    field: 'reservacionID',
+                                    sort: 'desc',
+                                },
+                            ],
+                        }
                     }}
                     pageSizeOptions={[5]}
                 />
@@ -250,7 +312,7 @@ export default function Packages() {
                                     fullWidth
                                     margin="normal"
                                     value={selectedReservation.nombreCliente}
-                                    disabled={seeReservation}
+                                    disabled={true}
                                 />
                             </Box>
                         </Grid2>
@@ -264,7 +326,7 @@ export default function Packages() {
                                     fullWidth
                                     margin="normal"
                                     value={selectedReservation.nombreActividad}
-                                    disabled={seeReservation}
+                                    disabled={true}
                                 />
                             </Box>
                         </Grid2>
@@ -278,7 +340,7 @@ export default function Packages() {
                                     fullWidth
                                     margin="normal"
                                     value={selectedReservation.cantidadPersonas}
-                                    disabled={seeReservation}
+                                    disabled={true}
                                 />
                             </Box>
                         </Grid2>
@@ -292,7 +354,7 @@ export default function Packages() {
                                     fullWidth
                                     margin="normal"
                                     value={selectedReservation.fechaReservacion}
-                                    disabled={seeReservation}
+                                    disabled={true}
                                 />
                             </Box>
                         </Grid2>
@@ -306,7 +368,7 @@ export default function Packages() {
                                     fullWidth
                                     margin="normal"
                                     value={selectedReservation.total}
-                                    disabled={seeReservation}
+                                    disabled={true}
                                 />
                             </Box>
                         </Grid2>
@@ -337,7 +399,7 @@ export default function Packages() {
                         </Grid2>
                     </Grid2>
                     <Box sx={{ display: seeReservation ? 'none' : 'flex', justifyContent: 'flex-end', padding: '20px 50px' }}>
-                        <BtnModal>
+                        <BtnModal onClick={handleEdit} disabled={isLoading}>
                             Guardar
                         </BtnModal>
                     </Box>
@@ -362,7 +424,7 @@ export default function Packages() {
                     <Button onClick={handleDeleteConfirmClose} color="primary">
                         Cancelar
                     </Button>
-                    <Button color="error">
+                    <Button onClick={handleDelete} color="error">
                         Eliminar
                     </Button>
                 </DialogActions>

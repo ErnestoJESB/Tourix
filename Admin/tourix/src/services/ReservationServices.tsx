@@ -10,4 +10,30 @@ const getReservations = async (id: number) => {
     }
 }
 
-export { getReservations };
+const updateReservation = async (id: number, data: any) => {
+    try {
+        const response = await axios.put(`${apiUrl}/Reservaciones/${id}`, data,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data.result;
+    }
+    catch (error) {
+        console.error(error);
+    }
+}
+
+const deleteReservation = async (id: number) => {
+    try {
+        const response = await axios.delete(`${apiUrl}/Reservaciones/${id}`);
+        return response.data.result;
+    }
+    catch (error) {
+        console.error(error);
+    }
+}
+
+export { getReservations, updateReservation, deleteReservation };

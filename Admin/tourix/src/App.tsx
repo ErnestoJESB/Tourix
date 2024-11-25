@@ -6,7 +6,7 @@ import { CssBaseline } from "@mui/material";
 import AppBar from './components/layout/AppBar';
 import Home from './components/home/Dashboard';
 import Tours from "./components/tours/Tours";
-import Packages from "./components/packages/Packages";
+import Reservations from "./components/reservations/Reservations";
 import SignIn from "./components/session/SignIn";
 import SignUp from "./components/session/SignUp";
 import NotFound404 from "./components/errors/NotFound404";
@@ -60,7 +60,7 @@ function App() {
             {/* Rutas que usan el AppBar */}
             <Route path="/" element={<DashboardLayout><Home /></DashboardLayout>} />
             <Route path="/tours" element={<DashboardLayout><Tours /></DashboardLayout>} />
-            <Route path="/packages" element={<DashboardLayout><Packages /></DashboardLayout>} />
+            <Route path="/reservations" element={<DashboardLayout><Reservations /></DashboardLayout>} />
             <Route path="*" element={<NotFound404 />} /> {/* Ruta 404 */}
             {/* Ruta sin AppBar (para el SignIn) */}
             <Route path="/sign-in" element={<SignIn />} />

@@ -68,6 +68,7 @@ export default function SignIn() {
         "success"
     );
     const [alertOpen, setAlertOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const isFormValid = email !== '' && password !== '' && email.includes('@') && email.includes('.') && password.trim().length > 0 && email.trim().length > 0;
 
@@ -77,6 +78,7 @@ export default function SignIn() {
     const navigate = useNavigate();
 
     const handleLogin = async () => {
+        setIsLoading(true);
         try {
             const response = await login(email, password);
             setAlertOpen(true);
@@ -90,6 +92,9 @@ export default function SignIn() {
             setAlertOpen(true);
             setAlertMessage('Error al iniciar sesión. Inténtalo de nuevo.');
             setAlertSeverity('error');
+        }
+        finally {
+            setIsLoading(false);
         }
     };
 
@@ -229,9 +234,9 @@ export default function SignIn() {
                                 marginBottom: '1rem',
                             }}
                             onClick={handleLogin}
-                            disabled={!isFormValid}
+                            disabled={!isFormValid || isLoading}
                         >
-                            Ingresar
+                            {isLoading ? 'Validando...' : 'Iniciar Sesión'}
                         </Button>
                         <Typography sx={{ textAlign: 'center' }}>
                             ¿No tienes una cuenta?{' '}
@@ -257,7 +262,7 @@ export default function SignIn() {
                     <Alert
                         onClose={handleAlertClose}
                         severity={alertSeverity}
-                        sx={{ width: {sm:'40%', md:'100%'} }}
+                        sx={{ width: { sm: '40%', md: '100%' } }}
                     >
                         {alertMessage}
                     </Alert>

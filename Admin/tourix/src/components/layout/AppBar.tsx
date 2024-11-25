@@ -230,7 +230,7 @@ export default function HeaderAdmin() {
                                 justifyContent: open ? "initial" : "center",
                                 px: 2.5,
                             }}
-                            onClick={() => navigate("/packages")}
+                            onClick={() => navigate("/reservations")}
                         >
                             <ListItemIcon
                                 sx={{
@@ -238,12 +238,12 @@ export default function HeaderAdmin() {
                                     mr: open ? 3 : "auto",
                                     justifyContent: "center",
                                 }}
-                                onClick={() => navigate("/packages")}
+                                onClick={() => navigate("/reservations")}
                             >
                                 <GridViewIcon />
                             </ListItemIcon>
                             <ListItemText
-                                primary={"Packages"}
+                                primary={"Reservations"}
                                 sx={{ opacity: open ? 1 : 0 }}
                             />
                         </ListItemButton>

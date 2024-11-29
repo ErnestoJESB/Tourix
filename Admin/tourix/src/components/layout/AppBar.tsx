@@ -18,7 +18,9 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Button from "@mui/material/Button";
 
-import { Home11Icon, Logout01Icon, MapsGlobal01Icon, GridViewIcon } from 'hugeicons-react';
+import logo from "../../assets/img/Tourix-White.png";
+
+import { Home11Icon, Logout01Icon, MapsGlobal01Icon, Notebook02Icon } from 'hugeicons-react';
 
 import { useNavigate } from "react-router-dom";
 
@@ -100,7 +102,7 @@ export default function HeaderAdmin() {
     const [agencia, setAgencia] = React.useState(() => {
         return localStorage.getItem("profile") ? JSON.parse(localStorage.getItem("profile") as string) : null;
     });
-    
+
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -122,7 +124,7 @@ export default function HeaderAdmin() {
             const profile = localStorage.getItem("profile");
             setAgencia(profile ? JSON.parse(profile) : null);
         };
-    
+
         window.addEventListener("storage", handleStorageChange);
         return () => {
             window.removeEventListener("storage", handleStorageChange);
@@ -146,8 +148,9 @@ export default function HeaderAdmin() {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h1" fontSize={30} noWrap component="div">
-                        Dashboard  - {agencia?.nombre}
+                    <Typography variant="h1" fontSize={30} noWrap component="div" display={'flex'} alignItems={'center'} gap={5} flexWrap={'wrap'}>
+                        <img src={logo} alt="Tourix" style={{ width: "150px" }} />
+                        Bienvenido {agencia?.nombre}
                     </Typography>
                 </Toolbar>
                 <Button
@@ -240,7 +243,7 @@ export default function HeaderAdmin() {
                                 }}
                                 onClick={() => navigate("/reservations")}
                             >
-                                <GridViewIcon />
+                                <Notebook02Icon />
                             </ListItemIcon>
                             <ListItemText
                                 primary={"Reservations"}
